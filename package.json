@@ -1,0 +1,19 @@
+{
+  "name": "medicontrol",
+  "private": true,
+  "packageManager": "pnpm@10.34.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev:api": "pnpm --filter api start:dev",
+    "build:api": "pnpm --filter api build",
+    "test:api": "pnpm --filter api test",
+    "test:api:e2e": "pnpm --filter api test:e2e",
+    "db:up": "docker compose up -d db",
+    "db:migrate": "pnpm --filter api exec prisma migrate dev",
+    "db:seed": "pnpm --filter api run prisma:seed",
+    "db:reset": "pnpm --filter api exec prisma migrate reset --force",
+    "db:studio": "pnpm --filter api exec prisma studio"
+  }
+}

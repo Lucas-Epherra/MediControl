@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GroupRole {
+  ADMIN
+  CAREGIVER
+  VIEWER
+}
+
+enum DoseStatus {
+  GIVEN
+  SKIPPED
+}
+
+enum StockMovementType {
+  RESTOCK
+  ADJUSTMENT
+  DOSE
+  DOSE_REVERTED
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships         Membership[]
+  invitationsSent     Invitation[]    @relation("InvitationCreatedBy")
+  invitationsAccepted Invitation[]    @relation("InvitationAcceptedBy")
+  doseRecords         DoseRecord[]
+  stockMovements      StockMovement[]
+}
+
+model CareGroup {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  patientName String
+  notes       String?
+  /// Zona horaria IANA usada para calcular los horarios de las tomas.
+  timezone    String   @default("America/Argentina/Buenos_Aires")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships   Membership[]
+  invitations   Invitation[]
+  medications   Medication[]
+  prescriptions Prescription[]
+  doseRecords   DoseRecord[]
+}
+
+model Membership {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  groupId   String    @db.Uuid
+  role      GroupRole
+  createdAt DateTime  @default(now())
+
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group CareGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@index([groupId])
+}
+
+model Invitation {
+  id           String    @id @default(uuid()) @db.Uuid
+  groupId      String    @db.Uuid
+  /// Si se indica, solo una cuenta con este email puede aceptarla.
+  email        String?
+  role         GroupRole
+  /// SHA-256 del token; el token en claro solo se muestra al crearla.
+  tokenHash    String    @unique
+  expiresAt    DateTime
+  createdById  String    @db.Uuid
+  acceptedById String?   @db.Uuid
+  acceptedAt   DateTime?
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+
+  group      CareGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdBy  User      @relation("InvitationCreatedBy", fields: [createdById], references: [id])
+  acceptedBy User?     @relation("InvitationAcceptedBy", fields: [acceptedById], references: [id])
+
+  @@index([groupId])
+}
+
+model Medication {
+  id                String   @id @default(uuid()) @db.Uuid
+  groupId           String   @db.Uuid
+  name              String
+  /// Concentración legible, por ejemplo "10 mg".
+  strength          String?
+  /// Forma farmacéutica o unidad: comprimido, ml, gotas.
+  form              String?
+  instructions      String?
+  /// Unidades disponibles. Admite fracciones (medio comprimido).
+  stock             Float    @default(0)
+  lowStockThreshold Float    @default(0)
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  group          CareGroup       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  schedules      Schedule[]
+  doseRecords    DoseRecord[]
+  stockMovements StockMovement[]
+  prescriptions  Prescription[]
+
+  @@index([groupId])
+}
+
+model Schedule {
+  id           String    @id @default(uuid()) @db.Uuid
+  medicationId String    @db.Uuid
+  /// Hora local del grupo, formato HH:mm.
+  timeOfDay    String
+  /// 1 = lunes ... 7 = domingo. Vacío = todos los días.
+  daysOfWeek   Int[]     @default([])
+  unitsPerDose Float     @default(1)
+  startDate    DateTime  @db.Date
+  endDate      DateTime? @db.Date
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  medication  Medication   @relation(fields: [medicationId], references: [id], onDelete: Cascade)
+  doseRecords DoseRecord[]
+
+  @@index([medicationId])
+}
+
+model DoseRecord {
+  id           String     @id @default(uuid()) @db.Uuid
+  groupId      String     @db.Uuid
+  medicationId String     @db.Uuid
+  scheduleId   String     @db.Uuid
+  /// Instante programado (UTC). Junto con scheduleId identifica la toma.
+  scheduledFor DateTime
+  status       DoseStatus
+  unitsGiven   Float      @default(0)
+  notes        String?
+  recordedById String     @db.Uuid
+  recordedAt   DateTime   @default(now())
+
+  group          CareGroup       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  medication     Medication      @relation(fields: [medicationId], references: [id], onDelete: Cascade)
+  schedule       Schedule        @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  recordedBy     User            @relation(fields: [recordedById], references: [id])
+  stockMovements StockMovement[]
+
+  /// Evita que dos cuidadores registren la misma toma programada.
+  @@unique([scheduleId, scheduledFor])
+  @@index([groupId, scheduledFor])
+}
+
+model StockMovement {
+  id           String            @id @default(uuid()) @db.Uuid
+  medicationId String            @db.Uuid
+  type         StockMovementType
+  delta        Float
+  stockAfter   Float
+  note         String?
+  doseRecordId String?           @db.Uuid
+  createdById  String            @db.Uuid
+  createdAt    DateTime          @default(now())
+
+  medication Medication  @relation(fields: [medicationId], references: [id], onDelete: Cascade)
+  doseRecord DoseRecord? @relation(fields: [doseRecordId], references: [id], onDelete: SetNull)
+  createdBy  User        @relation(fields: [createdById], references: [id])
+
+  @@index([medicationId, createdAt])
+}
+
+model Prescription {
+  id           String    @id @default(uuid()) @db.Uuid
+  groupId      String    @db.Uuid
+  medicationId String?   @db.Uuid
+  description  String
+  issuedAt     DateTime? @db.Date
+  expiresAt    DateTime  @db.Date
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  group      CareGroup   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  medication Medication? @relation(fields: [medicationId], references: [id], onDelete: SetNull)
+
+  @@index([groupId, expiresAt])
+}
