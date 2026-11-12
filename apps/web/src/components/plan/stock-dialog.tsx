@@ -2,30 +2,51 @@
 
 import { useState } from 'react';
 import { FormAlert } from '@/components/forms';
+import { SpinnerIcon } from '@/components/icons';
 import { BoxIcon, Button, Field, Modal, Stepper } from '@/components/ui';
-import { medicationLabel, useStockMovement, type StockMovementType } from '@/lib/medications';
+import { medicationLabel, useMedication, useStockMovement, type StockMovementType } from '@/lib/medications';
 import type { Medication } from '@/lib/types';
 import { formatAmount, formatUnits } from './format';
 
 const QUICK_AMOUNTS = [30, 60, 90];
 
-/**
- * Reponer suma unidades; ajustar fija el stock en el conteo real. Admite medias unidades.
- * `onDone` recibe el mensaje de confirmación para mostrarlo en la pantalla.
- */
-export function StockDialog({
-  groupId,
-  medication,
-  type,
-  onClose,
-  onDone,
-}: {
+interface StockDialogProps {
   groupId: string;
-  medication: Medication;
   type: StockMovementType;
   onClose: () => void;
+  /** Recibe el mensaje de confirmación para mostrarlo en la pantalla. */
   onDone: (message: string) => void;
-}) {
+}
+
+/**
+ * Reponer suma unidades; ajustar fija el stock en el conteo real. Admite medias unidades.
+ * Carga el medicamento por id: se usa desde el aviso de Hoy y desde el Plan.
+ */
+export function StockDialog({ medicationId, ...props }: StockDialogProps & { medicationId: string }) {
+  const medication = useMedication(props.groupId, medicationId);
+  const med = medication.data;
+  return (
+    <Modal
+      open
+      onOpenChange={(open) => !open && props.onClose()}
+      size="form"
+      title={props.type === 'RESTOCK' ? 'Reponer stock' : 'Ajustar al conteo real'}
+      description={med ? `${medicationLabel(med)}${med.form ? ` · ${med.form}` : ''}` : undefined}
+    >
+      {medication.isPending ? (
+        <p role="status" className="flex items-center justify-center gap-2 py-6 text-muted">
+          <SpinnerIcon size={22} className="text-primary" /> Cargando…
+        </p>
+      ) : medication.isError ? (
+        <FormAlert>{medication.error.message}</FormAlert>
+      ) : (
+        <StockForm medication={medication.data} {...props} />
+      )}
+    </Modal>
+  );
+}
+
+function StockForm({ groupId, medication, type, onClose, onDone }: StockDialogProps & { medication: Medication }) {
   const restock = type === 'RESTOCK';
   const [quantity, setQuantity] = useState(restock ? 30 : medication.stock);
   const [note, setNote] = useState('');
@@ -48,13 +69,6 @@ export function StockDialog({
   }
 
   return (
-    <Modal
-      open
-      onOpenChange={(open) => !open && onClose()}
-      size="form"
-      title={restock ? 'Reponer stock' : 'Ajustar al conteo real'}
-      description={`${medicationLabel(medication)}${medication.form ? ` · ${medication.form}` : ''}`}
-    >
       <form
         className="flex flex-col gap-4"
         onSubmit={(e) => {
@@ -116,6 +130,5 @@ export function StockDialog({
           </Button>
         </div>
       </form>
-    </Modal>
   );
 }

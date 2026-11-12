@@ -6,7 +6,8 @@ import { Suspense, useCallback, useEffect, useState } from 'react';
 import { FormAlert } from '@/components/forms';
 import { DayAlerts } from '@/components/hoy/day-alerts';
 import { DaySummary } from '@/components/hoy/day-summary';
-import { ConflictDialog, GiveDialog, RestockDialog, SkipDialog, type Conflict } from '@/components/hoy/dialogs';
+import { ConflictDialog, GiveDialog, SkipDialog, type Conflict } from '@/components/hoy/dialogs';
+import { StockDialog } from '@/components/plan/stock-dialog';
 import { DoseList } from '@/components/hoy/dose-list';
 import { medicationTitle } from '@/components/hoy/format';
 import { ChevronLeftIcon, ChevronRightIcon, SpinnerIcon } from '@/components/icons';
@@ -177,12 +178,15 @@ function Hoy() {
         onDone={notify}
       />
       <ConflictDialog conflict={conflict} timeZone={group.timezone} onClose={() => setConflict(null)} />
-      <RestockDialog
-        groupId={group.id}
-        medicationId={restocking}
-        onClose={() => setRestocking(null)}
-        onDone={notify}
-      />
+      {restocking && (
+        <StockDialog
+          groupId={group.id}
+          medicationId={restocking}
+          type="RESTOCK"
+          onClose={() => setRestocking(null)}
+          onDone={notify}
+        />
+      )}
       <Toast toast={toast} onDismiss={dismissToast} />
     </div>
   );
