@@ -3,10 +3,11 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useId, useState, type FormEvent } from 'react';
-import { FormAlert, SubmitButton, TextField } from '@/components/forms';
+import { FormAlert } from '@/components/forms';
 import { FullScreenLoader } from '@/components/full-screen-loader';
 import { GroupNotes } from '@/components/group-notes';
-import { ChevronRightIcon, PlusIcon } from '@/components/icons';
+import { ChevronRightIcon, PlusIcon, SpinnerIcon } from '@/components/icons';
+import { Button, Field } from '@/components/ui';
 import { Logo } from '@/components/logo';
 import { RequireSession } from '@/components/require-session';
 import { RoleChip } from '@/components/role-chip';
@@ -45,7 +46,7 @@ function GroupPicker() {
 
   return (
     <div className="min-h-dvh">
-      <header className="border-b border-line bg-surface">
+      <header className="border-b border-line bg-white">
         <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 lg:px-8">
           <Logo />
           <UserMenu />
@@ -66,7 +67,7 @@ function GroupPicker() {
             <button
               type="button"
               onClick={() => groups.refetch()}
-              className="min-h-touch rounded-btn border-2 border-primary bg-surface px-4 font-bold text-primary"
+              className="min-h-touch rounded-btn border-2 border-primary bg-white px-4 font-bold text-primary"
             >
               Reintentar
             </button>
@@ -77,7 +78,7 @@ function GroupPicker() {
               <li key={group.id}>
                 <Link
                   href={`/grupos/${group.id}`}
-                  className={`flex h-full items-center gap-3.5 rounded-card bg-surface px-4 py-4.5 text-ink no-underline hover:border-primary hover:text-ink lg:min-h-[220px] lg:flex-col lg:items-stretch lg:p-6 ${
+                  className={`flex h-full items-center gap-3.5 rounded-card bg-white px-4 py-[18px] text-ink no-underline hover:border-primary hover:text-ink lg:min-h-[220px] lg:flex-col lg:items-stretch lg:p-6 ${
                     index === 0 ? 'border-2 border-primary' : 'border-[1.5px] border-line'
                   }`}
                 >
@@ -154,14 +155,14 @@ function CreateGroupForm({ onCancel, onCreated }: { onCancel?: () => void; onCre
   return (
     <section
       aria-labelledby="crear-grupo"
-      className="max-w-[640px] rounded-card border-[1.5px] border-line bg-surface p-5 lg:p-7"
+      className="max-w-[640px] rounded-card border-[1.5px] border-line bg-white p-5 lg:p-7"
     >
       <h2 id="crear-grupo" className="text-h2 font-bold">
         Crear un grupo de cuidado
       </h2>
       <p className="mt-1 text-muted">Vas a quedar como administrador y después podés invitar a los demás.</p>
-      <form noValidate onSubmit={submit} className="mt-5 flex flex-col gap-4.5">
-        <TextField
+      <form noValidate onSubmit={submit} className="mt-5 flex flex-col gap-[18px]">
+        <Field
           label="Nombre del grupo"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -169,7 +170,7 @@ function CreateGroupForm({ onCancel, onCreated }: { onCancel?: () => void; onCre
           hint="Por ejemplo: Cuidado de Marta."
           error={errors.name}
         />
-        <TextField
+        <Field
           label="Persona cuidada"
           autoComplete="off"
           value={patientName}
@@ -188,7 +189,7 @@ function CreateGroupForm({ onCancel, onCreated }: { onCancel?: () => void; onCre
             maxLength={2000}
             rows={3}
             aria-describedby={`${notesId}-hint`}
-            className="min-w-0 rounded-btn border-2 border-muted bg-surface px-3.5 py-3 text-base text-ink focus-visible:border-primary"
+            className="min-w-0 rounded-btn border-2 border-muted bg-white px-3.5 py-3 text-base text-ink focus-visible:border-primary"
           />
           <span id={`${notesId}-hint`} className="text-sm text-muted">
             Alergias o indicaciones generales. Las ve todo el grupo arriba de las tomas del día.
@@ -196,15 +197,17 @@ function CreateGroupForm({ onCancel, onCreated }: { onCancel?: () => void; onCre
         </div>
         {create.isError && <FormAlert>{create.error.message}</FormAlert>}
         <div className="flex flex-wrap gap-2.5">
-          <SubmitButton pending={create.isPending}>{create.isPending ? 'Creando…' : 'Crear grupo'}</SubmitButton>
+          <Button
+            type="submit"
+            disabled={create.isPending}
+            icon={create.isPending ? <SpinnerIcon size={22} /> : undefined}
+          >
+            {create.isPending ? 'Creando…' : 'Crear grupo'}
+          </Button>
           {onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              className="min-h-action rounded-btn border-2 border-primary bg-surface px-5 text-[19px] font-bold text-primary hover:bg-primary-tint"
-            >
+            <Button type="button" variant="secondary" onClick={onCancel}>
               Cancelar
-            </button>
+            </Button>
           )}
         </div>
       </form>

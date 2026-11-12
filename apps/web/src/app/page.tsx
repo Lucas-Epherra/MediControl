@@ -11,7 +11,7 @@ export default function Home() {
 
   useEffect(() => {
     if (status === 'authenticated') router.replace('/grupos');
-    if (status === 'anonymous') router.replace('/ingresar');
+    if (status === 'anonymous') router.replace('/login');
   }, [status, router]);
 
   return <FullScreenLoader />;

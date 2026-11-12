@@ -13,7 +13,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
         <Logo inverted size="lg" />
         <div className="my-auto flex max-w-[520px] flex-col gap-7">
           <p className="text-[42px] leading-[1.15] font-bold">Todos los que cuidan, mirando la misma lista.</p>
-          <ul className="flex flex-col gap-4.5 text-[20px]">
+          <ul className="flex flex-col gap-[18px] text-[20px]">
             <li className="flex items-start gap-3.5">
               <CheckIcon size={26} className="mt-0.5 flex-none" />
               Qué se dio, quién y a qué hora.

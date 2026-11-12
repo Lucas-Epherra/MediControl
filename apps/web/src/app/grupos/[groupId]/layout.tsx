@@ -57,7 +57,7 @@ function GroupGate({ children }: { children: ReactNode }) {
           )}
           <Link
             href="/grupos?elegir=1"
-            className="flex min-h-action items-center rounded-btn border-2 border-primary bg-surface px-5 text-[19px] font-bold no-underline"
+            className="flex min-h-action items-center rounded-btn border-2 border-primary bg-white px-5 text-[19px] font-bold no-underline"
           >
             Ver mis grupos
           </Link>

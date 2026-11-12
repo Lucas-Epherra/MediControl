@@ -10,7 +10,7 @@ export function GroupNotes({ notes, compact = false }: { notes: string | null; c
   return (
     <span
       title={text}
-      className={`inline-flex max-w-full items-start gap-1.5 self-start rounded-lg border-[1.5px] border-ink bg-surface px-2.5 py-1 font-bold ${
+      className={`inline-flex max-w-full items-start gap-1.5 self-start rounded-lg border-[1.5px] border-ink bg-white px-2.5 py-1 font-bold ${
         compact ? 'text-nav' : 'text-sm'
       }`}
     >

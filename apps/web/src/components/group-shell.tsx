@@ -47,7 +47,7 @@ export function GroupShell({ group, children }: { group: Group; children: ReactN
       <Sidebar group={group} items={items} isCurrent={isCurrent} />
 
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-line bg-surface pr-3 pl-2 lg:hidden">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-line bg-white pr-3 pl-2 lg:hidden">
           <Link
             href="/grupos?elegir=1"
             aria-label={`${group.name}. Cambiar de grupo`}
@@ -58,7 +58,7 @@ export function GroupShell({ group, children }: { group: Group; children: ReactN
           </Link>
           <UserMenu subtitle={`${ROLE_LABEL[group.myRole]} · ${group.name}`} showSwitchGroup />
         </header>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-surface px-4 pt-2.5 pb-3 lg:hidden">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-white px-4 pt-2.5 pb-3 lg:hidden">
           <span className="font-bold">{group.patientName}</span>
           <GroupNotes notes={group.notes} />
         </div>
@@ -69,7 +69,7 @@ export function GroupShell({ group, children }: { group: Group; children: ReactN
 
         <nav
           aria-label="Principal"
-          className="fixed inset-x-0 bottom-0 z-20 grid h-[76px] border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-20 grid h-[76px] border-t border-line bg-white pb-[env(safe-area-inset-bottom)] lg:hidden"
           style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
         >
           {items.map(({ href, label, Icon }) => {
@@ -81,7 +81,7 @@ export function GroupShell({ group, children }: { group: Group; children: ReactN
                 aria-current={current ? 'page' : undefined}
                 className={`flex flex-col items-center justify-center gap-0.5 text-nav no-underline ${
                   current
-                    ? 'font-bold text-primary shadow-[inset_0_3px_0_var(--color-primary)]'
+                    ? 'font-bold text-primary shadow-[inset_0_3px_0_#0D5C63]'
                     : 'text-muted hover:text-ink'
                 }`}
               >
@@ -109,7 +109,7 @@ function Sidebar({
   const router = useRouter();
 
   return (
-    <aside className="sticky top-0 hidden h-dvh w-[264px] flex-none flex-col gap-5.5 overflow-y-auto border-r border-line bg-surface px-4 py-5 lg:flex">
+    <aside className="sticky top-0 hidden h-dvh w-[264px] flex-none flex-col gap-[22px] overflow-y-auto border-r border-line bg-white px-4 py-5 lg:flex">
       <Logo size="sm" />
       <div className="flex flex-col gap-1.5 rounded-[14px] bg-canvas p-3.5">
         <span className="text-card font-bold">{group.name}</span>
@@ -117,7 +117,7 @@ function Sidebar({
         <GroupNotes notes={group.notes} compact />
         <Link
           href="/grupos?elegir=1"
-          className="flex min-h-11 items-center gap-1.5 self-start text-sm font-bold no-underline"
+          className="flex min-h-[44px] items-center gap-1.5 self-start text-sm font-bold no-underline"
         >
           Cambiar de grupo
           <ChevronRightIcon size={16} />
@@ -159,9 +159,9 @@ function Sidebar({
             type="button"
             onClick={() => {
               logout();
-              router.replace('/ingresar');
+              router.replace('/login');
             }}
-            className="flex min-h-touch items-center justify-center gap-2 rounded-btn border-[1.5px] border-line bg-surface text-[17px] font-bold text-ink hover:border-muted"
+            className="flex min-h-touch items-center justify-center gap-2 rounded-btn border-[1.5px] border-line bg-white text-[17px] font-bold text-ink hover:border-muted"
           >
             <LogoutIcon size={20} />
             Cerrar sesión

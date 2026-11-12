@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import { AuthShell } from '@/components/auth-shell';
-import { EMAIL_PATTERN, FormAlert, SubmitButton, TextField } from '@/components/forms';
-import { ChevronLeftIcon } from '@/components/icons';
+import { EMAIL_PATTERN, FormAlert, PasswordField } from '@/components/forms';
+import { ChevronLeftIcon, SpinnerIcon } from '@/components/icons';
+import { Button, Field } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { safeNextPath } from '@/lib/next-path';
 import { useSession } from '@/lib/session';
@@ -33,7 +34,7 @@ function RegisterForm() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<Errors>({});
   const [pending, setPending] = useState(false);
-  const loginHref = next === '/grupos' ? '/ingresar' : `/ingresar?siguiente=${encodeURIComponent(next)}`;
+  const loginHref = next === '/grupos' ? '/login' : `/login?siguiente=${encodeURIComponent(next)}`;
 
   useEffect(() => {
     if (status === 'authenticated') router.replace(next);
@@ -80,8 +81,8 @@ function RegisterForm() {
         <h1 className="text-[30px] leading-[1.2] font-bold lg:text-[36px] lg:leading-[1.15]">Crear cuenta</h1>
         <p className="mt-2 text-muted">Después vas a poder crear un grupo o sumarte a uno con una invitación.</p>
       </div>
-      <form noValidate onSubmit={submit} className="flex flex-col gap-4.5">
-        <TextField
+      <form noValidate onSubmit={submit} className="flex flex-col gap-[18px]">
+        <Field
           label="Nombre"
           autoComplete="name"
           value={name}
@@ -90,7 +91,7 @@ function RegisterForm() {
           hint="Así te van a ver los demás en el registro."
           error={errors.name}
         />
-        <TextField
+        <Field
           label="Email"
           type="email"
           autoComplete="email"
@@ -99,9 +100,8 @@ function RegisterForm() {
           onChange={(e) => setEmail(e.target.value)}
           error={errors.email}
         />
-        <TextField
+        <PasswordField
           label="Contraseña"
-          type="password"
           autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -110,7 +110,9 @@ function RegisterForm() {
           error={errors.password}
         />
         {errors.form && <FormAlert>{errors.form}</FormAlert>}
-        <SubmitButton pending={pending}>{pending ? 'Creando cuenta…' : 'Crear cuenta'}</SubmitButton>
+        <Button type="submit" disabled={pending} icon={pending ? <SpinnerIcon size={22} /> : undefined}>
+          {pending ? 'Creando cuenta…' : 'Crear cuenta'}
+        </Button>
       </form>
       <p className="border-t border-line pt-5 text-center text-muted lg:text-left">
         ¿Ya tenés cuenta?{' '}

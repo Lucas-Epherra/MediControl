@@ -16,7 +16,7 @@ export function UserMenu({ subtitle, showSwitchGroup = false }: { subtitle?: str
 
   function signOut() {
     logout();
-    router.replace('/ingresar');
+    router.replace('/login');
   }
 
   return (
@@ -25,7 +25,7 @@ export function UserMenu({ subtitle, showSwitchGroup = false }: { subtitle?: str
         type="button"
         popoverTarget={id}
         aria-label={`Menú de ${user.name}`}
-        className="flex min-h-touch items-center gap-1.5 rounded-full border-[1.5px] border-line bg-surface py-0 pr-2.5 pl-1.5 text-ink hover:border-muted"
+        className="flex min-h-touch items-center gap-1.5 rounded-full border-[1.5px] border-line bg-white py-0 pr-2.5 pl-1.5 text-ink hover:border-muted"
       >
         <Avatar name={user.name} size="sm" />
         <ChevronDownIcon size={18} />
@@ -33,7 +33,7 @@ export function UserMenu({ subtitle, showSwitchGroup = false }: { subtitle?: str
       <div
         id={id}
         popover="auto"
-        className="fixed inset-auto top-[60px] right-3 m-0 w-[280px] rounded-[14px] border border-line bg-surface p-2 text-ink shadow-[0_12px_32px_rgba(23,40,43,0.18)]"
+        className="fixed inset-auto top-[60px] right-3 m-0 w-[280px] rounded-[14px] border border-line bg-white p-2 text-ink shadow-[0_12px_32px_rgba(23,40,43,0.18)]"
       >
         <div className="border-b border-line-soft px-3 pt-2.5 pb-3">
           <div className="font-bold">{user.name}</div>

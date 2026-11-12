@@ -13,7 +13,7 @@ export function RequireSession({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (status === 'anonymous') {
-      router.replace(`/ingresar?siguiente=${encodeURIComponent(pathname)}`);
+      router.replace(`/login?siguiente=${encodeURIComponent(pathname)}`);
     }
   }, [status, router, pathname]);
 

@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import { AuthShell } from '@/components/auth-shell';
-import { EMAIL_PATTERN, FormAlert, SubmitButton, TextField } from '@/components/forms';
+import { EMAIL_PATTERN, FormAlert, PasswordField } from '@/components/forms';
+import { SpinnerIcon } from '@/components/icons';
+import { Button, Field } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { safeNextPath } from '@/lib/next-path';
 import { useSession } from '@/lib/session';
@@ -67,8 +69,8 @@ function LoginForm() {
         <h1 className="text-[30px] leading-[1.2] font-bold lg:text-[36px] lg:leading-[1.15]">Ingresar</h1>
         <p className="mt-2 text-muted">Usá el email con el que te invitaron o te registraste.</p>
       </div>
-      <form noValidate onSubmit={submit} className="flex flex-col gap-4.5">
-        <TextField
+      <form noValidate onSubmit={submit} className="flex flex-col gap-[18px]">
+        <Field
           label="Email"
           type="email"
           autoComplete="email"
@@ -77,22 +79,23 @@ function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           error={errors.email}
         />
-        <TextField
+        <PasswordField
           label="Contraseña"
-          type="password"
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           error={errors.password}
         />
         {errors.form && <FormAlert>{errors.form}</FormAlert>}
-        <SubmitButton pending={pending}>{pending ? 'Ingresando…' : 'Ingresar'}</SubmitButton>
+        <Button type="submit" disabled={pending} icon={pending ? <SpinnerIcon size={22} /> : undefined}>
+          {pending ? 'Ingresando…' : 'Ingresar'}
+        </Button>
       </form>
       <div className="flex flex-col items-center gap-2 border-t border-line pt-5 lg:block">
         <span className="text-muted">¿Es tu primera vez? </span>
         <Link
-          href={next === '/grupos' ? '/crear-cuenta' : `/crear-cuenta?siguiente=${encodeURIComponent(next)}`}
-          className="flex min-h-action w-full items-center justify-center rounded-btn border-2 border-primary bg-surface text-[19px] font-bold no-underline lg:inline lg:min-h-0 lg:w-auto lg:border-0 lg:bg-transparent lg:text-base lg:underline"
+          href={next === '/grupos' ? '/registro' : `/registro?siguiente=${encodeURIComponent(next)}`}
+          className="flex min-h-action w-full items-center justify-center rounded-btn border-2 border-primary bg-white text-[19px] font-bold no-underline lg:inline lg:min-h-0 lg:w-auto lg:border-0 lg:bg-transparent lg:text-base lg:underline"
         >
           Crear cuenta
         </Link>

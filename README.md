@@ -10,7 +10,7 @@ cuidadores. Proyecto de hackatón (48 h, 2 personas).
 
 ```
 apps/api   NestJS 11 + Prisma 6 + PostgreSQL (backend)
-apps/web   Next.js 16 + Tailwind 4 + TanStack Query (frontend)
+apps/web   Next.js 16 + Tailwind 3 + TanStack Query (frontend)
 docs/      planificación y arquitectura
 ```
 
