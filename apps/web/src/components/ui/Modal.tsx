@@ -12,6 +12,8 @@ export interface ModalProps {
   children?: ReactNode;
   /** false para diálogos sin botón de cerrar aparte (ej. confirmaciones simples). */
   showCloseButton?: boolean;
+  /** 'form': más ancho, alineado a la izquierda, para formularios. */
+  size?: "dialog" | "form";
 }
 
 // Modal sobre Radix Dialog: hoja inferior en celular, diálogo centrado en
@@ -24,13 +26,17 @@ export function Modal({
   description,
   children,
   showCloseButton = true,
+  size = "dialog",
 }: ModalProps) {
+  const isForm = size === "form";
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-[rgba(15,30,32,0.55)]" />
         <Dialog.Content
-          className="fixed inset-x-0 bottom-0 z-50 box-border flex max-h-[85vh] flex-col gap-3 rounded-t-modal bg-white p-6 text-center focus:outline-none sm:inset-x-auto sm:inset-y-auto sm:left-1/2 sm:top-1/2 sm:w-[340px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-modal sm:items-center"
+          className={`fixed inset-x-0 bottom-0 z-50 box-border flex max-h-[90vh] flex-col gap-3 overflow-y-auto rounded-t-modal bg-white p-6 focus:outline-none sm:inset-x-auto sm:inset-y-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-modal ${
+            isForm ? "text-left sm:w-[520px]" : "text-center sm:w-[340px] sm:items-center"
+          }`}
         >
           {showCloseButton && (
             <Dialog.Close
@@ -44,7 +50,9 @@ export function Modal({
           {description && (
             <Dialog.Description className="text-muted">{description}</Dialog.Description>
           )}
-          <div className="flex w-full flex-col items-stretch gap-2.5 text-left sm:items-center sm:text-center">
+          <div
+            className={`flex w-full flex-col items-stretch gap-2.5 text-left ${isForm ? "" : "sm:items-center sm:text-center"}`}
+          >
             {children}
           </div>
         </Dialog.Content>

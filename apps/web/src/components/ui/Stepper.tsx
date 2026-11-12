@@ -30,7 +30,7 @@ export function Stepper({
         aria-label={`Restar${suffix}`}
         onClick={() => onChange(Math.max(min, round(value - step)))}
         disabled={value <= min}
-        className="h-16 w-16 rounded-card border-2 border-primary text-3xl font-bold text-primary disabled:border-disabled disabled:text-muted"
+        className="h-16 w-16 flex-none rounded-card border-2 border-primary text-3xl font-bold text-primary disabled:border-disabled disabled:text-muted"
       >
         −
       </button>
@@ -46,14 +46,14 @@ export function Stepper({
           const n = Number(e.target.value);
           if (!Number.isNaN(n)) onChange(n);
         }}
-        className="box-border h-16 w-[140px] rounded-card border-2 border-muted text-center text-[32px] font-bold"
+        className="box-border h-16 w-0 min-w-[64px] max-w-[140px] flex-1 rounded-card border-2 border-muted text-center text-[32px] font-bold"
       />
       <button
         type="button"
         aria-label={`Sumar${suffix}`}
         onClick={() => onChange(Math.min(max, round(value + step)))}
         disabled={value >= max}
-        className="h-16 w-16 rounded-card border-2 border-primary text-3xl font-bold text-primary disabled:border-disabled disabled:text-muted"
+        className="h-16 w-16 flex-none rounded-card border-2 border-primary text-3xl font-bold text-primary disabled:border-disabled disabled:text-muted"
       >
         +
       </button>
