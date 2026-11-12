@@ -17,7 +17,7 @@ import { dayBounds, formatTimeInZone, todayInZone } from '../common/dates';
 import { isUniqueViolation } from '../common/prisma-exception.filter';
 import { PrismaService } from '../prisma/prisma.service';
 import { DoseSlotStatus, isTooEarlyToRecord, slotStatus, UNDO_WINDOW_HOURS } from './dose-status';
-import { RecordDoseDto } from './doses.dto';
+import { HistoryQuery, RecordDoseDto } from './doses.dto';
 import { isOccurrence, occurrenceInstant, occursOn } from './occurrences';
 
 const MAX_HISTORY_DAYS = 92;
@@ -214,7 +214,7 @@ export class DosesService {
     });
   }
 
-  async history(groupId: string, from?: string, to?: string, medicationId?: string) {
+  async history(groupId: string, { from, to, medicationId, recordedById, status }: HistoryQuery) {
     const zone = await this.groupZone(groupId);
     const toIso = to ?? todayInZone(zone);
     const fromIso =
@@ -225,20 +225,26 @@ export class DosesService {
       throw new BadRequestException(`El rango máximo es de ${MAX_HISTORY_DAYS} días`);
     }
 
-    const records = await this.prisma.doseRecord.findMany({
-      where: {
-        groupId,
-        medicationId,
-        scheduledFor: { gte: dayBounds(fromIso, zone).start, lt: dayBounds(toIso, zone).end },
-      },
-      include: { ...recordInclude, medication: { select: medicationSelect } },
-      orderBy: { scheduledFor: 'desc' },
-      take: 1000,
-    });
+    const scheduledFor = { gte: dayBounds(fromIso, zone).start, lt: dayBounds(toIso, zone).end };
+    const [records, recorders] = await Promise.all([
+      this.prisma.doseRecord.findMany({
+        where: { groupId, medicationId, recordedById, status, scheduledFor },
+        include: { ...recordInclude, medication: { select: medicationSelect } },
+        orderBy: { scheduledFor: 'desc' },
+        take: 1000,
+      }),
+      // Quiénes registraron en el período, sin los demás filtros: alimenta el filtro por responsable.
+      this.prisma.doseRecord.findMany({
+        where: { groupId, scheduledFor },
+        distinct: ['recordedById'],
+        select: { recordedBy: { select: { id: true, name: true } } },
+      }),
+    ]);
     return {
       from: fromIso,
       to: toIso,
       timezone: zone,
+      recorders: recorders.map((r) => r.recordedBy).sort((a, b) => a.name.localeCompare(b.name, 'es')),
       records: records.map((r) => ({ ...presentRecord(r), medication: r.medication })),
     };
   }

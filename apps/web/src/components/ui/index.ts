@@ -8,6 +8,8 @@ export { Modal } from "./Modal";
 export type { ModalProps } from "./Modal";
 export { Field } from "./Field";
 export type { FieldProps } from "./Field";
+export { SelectField } from "./SelectField";
+export type { SelectFieldProps } from "./SelectField";
 export { Stepper } from "./Stepper";
 export type { StepperProps } from "./Stepper";
 export { AlertCard } from "./AlertCard";
