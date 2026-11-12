@@ -1,5 +1,7 @@
 import { DoseStatus } from '@prisma/client';
+import { Transform } from 'class-transformer';
 import {
+  IsBoolean,
   IsEnum,
   IsISO8601,
   IsOptional,
@@ -58,4 +60,10 @@ export class HistoryQuery {
   @IsOptional()
   @IsEnum(DoseStatus)
   status?: DoseStatus;
+
+  /** true: solo las tomas deshechas; false: solo las vigentes. Sin indicar, todas. */
+  @IsOptional()
+  @Transform(({ value }) => (value === 'true' ? true : value === 'false' ? false : value))
+  @IsBoolean()
+  undone?: boolean;
 }

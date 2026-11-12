@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { FormAlert } from '@/components/forms';
 import { Avatar } from '@/components/avatar';
-import { SpinnerIcon } from '@/components/icons';
+import { SpinnerIcon, UndoIcon } from '@/components/icons';
 import { Button, Field, SelectField, StatusBadge } from '@/components/ui';
 import { addDays, daysBetween, formatDayHeading, formatShortDate, formatTime, isoDateInZone, todayInZone } from '@/lib/dates';
 import { useGroup } from '@/lib/group-context';
@@ -12,7 +12,7 @@ import { medicationLabel, useMedications } from '@/lib/medications';
 import type { DoseHistory, DoseRecordStatus } from '@/lib/types';
 
 type Period = 'hoy' | 'ayer' | '7d' | 'rango';
-type StatusFilter = 'todos' | DoseRecordStatus;
+type StatusFilter = 'todos' | DoseRecordStatus | 'UNDONE';
 type HistoryRecord = DoseHistory['records'][number];
 
 const PERIODS: { value: Period; label: string; short: string }[] = [
@@ -62,7 +62,9 @@ export default function HistorialPage() {
       to: bounds.to,
       medicationId: medicationId || undefined,
       recordedById: recordedById || undefined,
-      status: status === 'todos' ? undefined : status,
+      // «Dadas» y «Omitidas» son las vigentes; «Deshechas», las que alguien deshizo.
+      status: status === 'todos' || status === 'UNDONE' ? undefined : status,
+      undone: status === 'todos' ? undefined : status === 'UNDONE',
     },
     !invalidRange,
   );
@@ -162,6 +164,7 @@ export default function HistorialPage() {
                 { value: 'todos', label: 'Todos' },
                 { value: 'GIVEN', label: 'Dadas' },
                 { value: 'SKIPPED', label: 'Omitidas' },
+                { value: 'UNDONE', label: 'Deshechas' },
               ]}
             />
           </div>
@@ -234,6 +237,11 @@ function HistoryRow({ record, zone, scheduledDate }: { record: HistoryRecord; zo
   const recordedAt = recordedDate === scheduledDate ? recordedTime : `${formatShortDate(recordedDate)} ${recordedTime}`;
   const note = record.notes ? (skipped ? `Motivo: ${record.notes}` : record.notes) : null;
   const medication = medicationLabel(record.medication);
+  const undone = record.undoneAt
+    ? `Se había registrado como ${skipped ? 'omitida' : 'dada'}. La deshizo ${record.undoneBy?.name ?? 'alguien'} a las ${formatTime(record.undoneAt, zone)}${
+        isoDateInZone(record.undoneAt, zone) === scheduledDate ? '' : ` del ${formatShortDate(isoDateInZone(record.undoneAt, zone))}`
+      }.`
+    : null;
 
   return (
     <li className="flex flex-col gap-1.5 border-t border-line-soft px-4 py-3.5 first:border-t-0 lg:grid lg:grid-cols-[72px_minmax(0,1.4fr)_130px_minmax(0,1fr)_110px_minmax(0,1.6fr)] lg:items-center lg:gap-4 lg:border-t lg:first:border-t">
@@ -246,7 +254,15 @@ function HistoryRow({ record, zone, scheduledDate }: { record: HistoryRecord; zo
       </div>
       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 lg:contents">
         <span>
-          <StatusBadge status={skipped ? 'omitida' : 'dada'} />
+          {undone ? (
+            // Deshecha: tono neutro, para no leerse como una toma dada u omitida vigente.
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border-[1.5px] border-muted bg-white px-3 py-1.5 text-sm font-bold text-muted">
+              <UndoIcon size={18} />
+              Deshecha
+            </span>
+          ) : (
+            <StatusBadge status={skipped ? 'omitida' : 'dada'} />
+          )}
         </span>
         <span className="flex items-center gap-2 text-[17px] lg:text-base">
           <span className="hidden lg:inline-flex">
@@ -260,8 +276,11 @@ function HistoryRow({ record, zone, scheduledDate }: { record: HistoryRecord; zo
         </span>
         <span className="hidden tabular-nums lg:inline">{recordedAt}</span>
       </div>
-      {note ? (
-        <p className="rounded-chip bg-canvas px-3 py-2 text-[17px] text-muted lg:bg-transparent lg:p-0">{note}</p>
+      {note || undone ? (
+        <div className="flex flex-col gap-1 rounded-chip bg-canvas px-3 py-2 text-[17px] text-muted lg:bg-transparent lg:p-0">
+          {note && <p>{note}</p>}
+          {undone && <p className="font-bold text-ink">{undone}</p>}
+        </div>
       ) : (
         <span className="hidden text-muted lg:inline" aria-hidden="true">
           —
