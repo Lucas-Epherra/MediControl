@@ -10,7 +10,7 @@ cuidadores. Proyecto de hackatón (48 h, 2 personas).
 
 ```
 apps/api   NestJS 11 + Prisma 6 + PostgreSQL (backend)
-apps/web   Next.js (frontend, pendiente)
+apps/web   Next.js 16 + Tailwind 4 + TanStack Query (frontend)
 docs/      planificación y arquitectura
 ```
 
@@ -25,6 +25,8 @@ cp apps/api/.env.example apps/api/.env       # cambiar JWT_SECRET
 pnpm db:migrate                              # aplica migraciones
 pnpm db:seed                                 # datos de demo
 pnpm dev:api                                 # http://localhost:3001/api
+cp apps/web/.env.example apps/web/.env.local
+pnpm dev:web                                 # http://localhost:3000
 ```
 
 Swagger: <http://localhost:3001/docs>.

@@ -7,7 +7,9 @@
   },
   "scripts": {
     "dev:api": "pnpm --filter api start:dev",
+    "dev:web": "pnpm --filter web dev",
     "build:api": "pnpm --filter api build",
+    "build:web": "pnpm --filter web build",
     "test:api": "pnpm --filter api test",
     "test:api:e2e": "pnpm --filter api test:e2e",
     "db:up": "docker compose up -d db",
