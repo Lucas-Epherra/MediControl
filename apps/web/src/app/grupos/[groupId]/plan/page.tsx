@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { FormAlert } from '@/components/forms';
-import { PlusIcon, SpinnerIcon } from '@/components/icons';
+import { PlusIcon, PrinterIcon, SpinnerIcon } from '@/components/icons';
 import { daysLabel, formatAmount, formatUnits } from '@/components/plan/format';
 import { PlanHeader } from '@/components/plan/plan-header';
 import { StockDialog } from '@/components/plan/stock-dialog';
@@ -60,16 +60,26 @@ export default function PlanPage() {
         subtitle={subtitle}
         prescriptionAlerts={prescriptionAlerts}
         action={
-          canEdit && (
+          <div className="flex flex-wrap items-center gap-2">
             <Link
-              href={`/grupos/${group.id}/plan/nuevo`}
-              className="flex min-h-action items-center gap-2 rounded-btn bg-primary px-5 text-[19px] font-bold text-white no-underline hover:bg-primary-hover hover:text-white"
+              href={`/grupos/${group.id}/plan/imprimir`}
+              className="flex min-h-action items-center gap-2 rounded-btn border-2 border-primary bg-white px-5 text-[19px] font-bold text-primary no-underline hover:bg-primary-tint hover:text-primary"
             >
-              <PlusIcon size={22} />
-              <span className="lg:hidden">Agregar</span>
-              <span className="hidden lg:inline">Agregar medicamento</span>
+              <PrinterIcon size={22} />
+              Imprimir
+              <span className="hidden lg:inline">plan</span>
             </Link>
-          )
+            {canEdit && (
+              <Link
+                href={`/grupos/${group.id}/plan/nuevo`}
+                className="flex min-h-action items-center gap-2 rounded-btn bg-primary px-5 text-[19px] font-bold text-white no-underline hover:bg-primary-hover hover:text-white"
+              >
+                <PlusIcon size={22} />
+                <span className="lg:hidden">Agregar</span>
+                <span className="hidden lg:inline">Agregar medicamento</span>
+              </Link>
+            )}
+          </div>
         }
       />
 

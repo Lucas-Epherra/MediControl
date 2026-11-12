@@ -1,6 +1,7 @@
 'use client';
 
-import { ShareIcon, SpinnerIcon } from '@/components/icons';
+import Link from 'next/link';
+import { PrinterIcon, ShareIcon, SpinnerIcon } from '@/components/icons';
 import type { ToastMessage } from '@/components/toast';
 import { Button } from '@/components/ui';
 import { useDaySummaryText } from '@/lib/queries';
@@ -45,14 +46,24 @@ export function ShareSummary({
   }
 
   return (
-    <Button
-      variant="secondary"
-      onClick={share}
-      disabled={summary.isPending}
-      icon={summary.isPending ? <SpinnerIcon size={22} /> : <ShareIcon size={22} />}
-      className="w-full"
-    >
-      Compartir resumen
-    </Button>
+    <div className="flex flex-col gap-2">
+      <Button
+        variant="secondary"
+        onClick={share}
+        disabled={summary.isPending}
+        icon={summary.isPending ? <SpinnerIcon size={22} /> : <ShareIcon size={22} />}
+        className="w-full"
+      >
+        Compartir resumen
+      </Button>
+      {/* Para todos los roles: el VIEWER no entra al Plan, pero puede imprimirlo. */}
+      <Link
+        href={`/grupos/${groupId}/plan/imprimir`}
+        className="flex min-h-touch items-center justify-center gap-2 rounded-btn border-[1.5px] border-line bg-white px-4 font-bold text-ink no-underline hover:bg-canvas hover:text-ink"
+      >
+        <PrinterIcon size={22} />
+        Imprimir plan
+      </Link>
+    </div>
   );
 }

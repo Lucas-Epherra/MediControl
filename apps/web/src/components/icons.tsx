@@ -175,3 +175,11 @@ export const ShareIcon = (p: IconProps) => (
     <path d="M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5" />
   </Icon>
 );
+
+export const PrinterIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M7 9V3.5h10V9" />
+    <path d="M7 17.5H5A1.5 1.5 0 0 1 3.5 16v-5.5A1.5 1.5 0 0 1 5 9h14a1.5 1.5 0 0 1 1.5 1.5V16a1.5 1.5 0 0 1-1.5 1.5h-2" />
+    <path d="M7 14h10v6.5H7z" />
+  </Icon>
+);
