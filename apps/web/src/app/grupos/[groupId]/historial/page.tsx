@@ -54,31 +54,23 @@ export default function HistorialPage() {
 
   // Los archivados también: su historial sigue existiendo.
   const medications = useMedications(group.id, { includeInactive: true });
+  // Todos los filtros los resuelve la API.
   const history = useDoseHistory(
     group.id,
-    { from: bounds.from, to: bounds.to, medicationId: medicationId || undefined },
+    {
+      from: bounds.from,
+      to: bounds.to,
+      medicationId: medicationId || undefined,
+      recordedById: recordedById || undefined,
+      status: status === 'todos' ? undefined : status,
+    },
     !invalidRange,
   );
 
-  const records = history.data?.records;
-
-  // La API no filtra por responsable ni por estado: se hace acá, sobre el resultado.
-  const people = useMemo(() => {
-    const byId = new Map<string, string>();
-    records?.forEach((r) => byId.set(r.recordedBy.id, r.recordedBy.name));
-    return [...byId].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, 'es'));
-  }, [records]);
-
-  const visible = useMemo(
-    () =>
-      (records ?? []).filter(
-        (r) => (!recordedById || r.recordedBy.id === recordedById) && (status === 'todos' || r.status === status),
-      ),
-    [records, recordedById, status],
-  );
-
-  const days = useMemo(() => groupByDay(visible, zone), [visible, zone]);
-  const hasLocalFilters = recordedById !== '' || status !== 'todos';
+  const visible = history.data?.records ?? [];
+  const people = history.data?.recorders ?? [];
+  const days = useMemo(() => groupByDay(history.data?.records ?? [], zone), [history.data, zone]);
+  const hasExtraFilters = medicationId !== '' || recordedById !== '' || status !== 'todos';
 
   return (
     <div className="mx-auto flex max-w-[1100px] flex-col gap-5 px-4 pt-5 pb-8 lg:px-10 lg:pt-10">
@@ -199,7 +191,7 @@ export default function HistorialPage() {
         </div>
       ) : days.length === 0 ? (
         <p className="rounded-card border border-line bg-white px-5 py-10 text-center text-muted">
-          {hasLocalFilters ? 'No hay tomas registradas con estos filtros.' : 'No hay tomas registradas en este período.'}
+          {hasExtraFilters ?'No hay tomas registradas con estos filtros.' : 'No hay tomas registradas en este período.'}
         </p>
       ) : (
         <div className="flex flex-col gap-6">

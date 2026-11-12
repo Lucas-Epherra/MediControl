@@ -48,6 +48,8 @@ export interface DoseHistory {
   from: string;
   to: string;
   timezone: string;
+  /** Quienes registraron tomas en el período, sin aplicar los demás filtros. */
+  recorders: { id: string; name: string }[];
   records: (DoseRecord & { medication: MedicationSummary })[];
 }
 
