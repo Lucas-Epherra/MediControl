@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './api';
-import type { Alert, DayResponse, DoseRecord, Group, Medication } from './types';
+import type { Alert, DayResponse, DoseRecord, Group } from './types';
 
 export const queryKeys = {
   groups: ['groups'] as const,
@@ -10,7 +10,6 @@ export const queryKeys = {
   day: (groupId: string, date?: string) => ['groups', groupId, 'day', date ?? 'hoy'] as const,
   days: (groupId: string) => ['groups', groupId, 'day'] as const,
   alerts: (groupId: string) => ['groups', groupId, 'alerts'] as const,
-  medication: (groupId: string, medicationId: string) => ['groups', groupId, 'medications', medicationId] as const,
 };
 
 /** La vista del día se vuelve a pedir cada 30 s y al volver a la pestaña (sin WebSocket). */
@@ -32,13 +31,6 @@ export function useAlerts(groupId: string) {
   });
 }
 
-export function useMedication(groupId: string, medicationId: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.medication(groupId, medicationId ?? ''),
-    queryFn: () => api<Medication>(`/groups/${groupId}/medications/${medicationId}`),
-    enabled: !!medicationId,
-  });
-}
 
 export interface RecordDoseInput {
   scheduleId: string;
@@ -78,20 +70,6 @@ export function useUndoDose(groupId: string) {
   });
 }
 
-export function useRestock(groupId: string) {
-  const refresh = useRefreshDay(groupId);
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ medicationId, quantity }: { medicationId: string; quantity: number }) =>
-      api<{ stock: number }>(`/groups/${groupId}/medications/${medicationId}/stock`, {
-        method: 'POST',
-        body: { type: 'RESTOCK', quantity },
-      }),
-    onSuccess: (_, { medicationId }) =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.medication(groupId, medicationId) }),
-    onSettled: refresh,
-  });
-}
 
 export function useGroups() {
   return useQuery({ queryKey: queryKeys.groups, queryFn: () => api<Group[]>('/groups') });
