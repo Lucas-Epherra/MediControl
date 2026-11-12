@@ -12,7 +12,7 @@ import { medicationTitle } from '@/components/hoy/format';
 import { ChevronLeftIcon, ChevronRightIcon, SpinnerIcon } from '@/components/icons';
 import { Toast, type ToastMessage } from '@/components/toast';
 import { Button } from '@/components/ui';
-import { capitalize, formatLongDate, formatTime, isoDateIn, shiftIsoDate } from '@/lib/dates';
+import { addDays, capitalize, formatLongDate, formatTime, isoDateInZone } from '@/lib/dates';
 import { useGroup } from '@/lib/group-context';
 import { useAlerts, useDay, useUndoDose } from '@/lib/queries';
 import { can } from '@/lib/roles';
@@ -47,7 +47,7 @@ function Hoy() {
   const param = useSearchParams().get('fecha');
   const now = useNow();
 
-  const today = isoDateIn(group.timezone, new Date(now));
+  const today = isoDateInZone(new Date(now), group.timezone);
   const date = param && ISO_DATE.test(param) && param !== today ? param : undefined;
   const shown = date ?? today;
 
@@ -78,7 +78,7 @@ function Hoy() {
     });
   }
 
-  const relative = shown === today ? 'Hoy' : shown === shiftIsoDate(today, -1) ? 'Ayer' : shown === shiftIsoDate(today, 1) ? 'Mañana' : null;
+  const relative = shown === today ? 'Hoy' : shown === addDays(today, -1) ? 'Ayer' : shown === addDays(today, 1) ? 'Mañana' : null;
   const longDate = formatLongDate(shown);
   const title = relative ? `${relative}, ${longDate}` : capitalize(longDate);
 
@@ -100,7 +100,7 @@ function Hoy() {
         <nav aria-label="Cambiar de día" className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => goTo(shiftIsoDate(shown, -1))}
+            onClick={() => goTo(addDays(shown, -1))}
             aria-label="Día anterior"
             className="flex h-12 w-12 items-center justify-center rounded-btn border-[1.5px] border-line bg-white text-ink hover:border-muted"
           >
@@ -113,7 +113,7 @@ function Hoy() {
           )}
           <button
             type="button"
-            onClick={() => goTo(shiftIsoDate(shown, 1))}
+            onClick={() => goTo(addDays(shown, 1))}
             aria-label="Día siguiente"
             className="flex h-12 w-12 items-center justify-center rounded-btn border-[1.5px] border-line bg-white text-ink hover:border-muted"
           >

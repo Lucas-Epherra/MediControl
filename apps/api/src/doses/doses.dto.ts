@@ -49,4 +49,13 @@ export class HistoryQuery {
   @IsOptional()
   @IsUUID()
   medicationId?: string;
+
+  /** Solo las tomas que registró este usuario. */
+  @IsOptional()
+  @IsUUID()
+  recordedById?: string;
+
+  @IsOptional()
+  @IsEnum(DoseStatus)
+  status?: DoseStatus;
 }

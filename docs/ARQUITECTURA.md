@@ -160,7 +160,7 @@ fija el conteo real.
 | GET | `/groups/:groupId/day?date=YYYY-MM-DD` | Miembro (sin `date` = hoy en la zona del grupo) |
 | POST | `/groups/:groupId/doses` | ADMIN, CAREGIVER |
 | DELETE | `/groups/:groupId/doses/:doseId` | Quien registró (24 h) o ADMIN |
-| GET | `/groups/:groupId/doses?from=&to=&medicationId=` | Miembro — historial |
+| GET | `/groups/:groupId/doses?from=&to=&medicationId=&recordedById=&status=` | Miembro — historial; incluye `recorders` del período |
 
 ```jsonc
 // POST /groups/:groupId/doses

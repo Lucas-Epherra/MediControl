@@ -2,7 +2,7 @@
 
 import { UndoIcon } from '@/components/icons';
 import { CheckIcon, DoseCard, type DoseCardAction } from '@/components/ui';
-import { formatAgo, formatTime, isoDateIn } from '@/lib/dates';
+import { formatAgo, formatTime, isoDateInZone } from '@/lib/dates';
 import { can } from '@/lib/roles';
 import type { DaySlot, Group } from '@/lib/types';
 import { canRecordNow, doseDetail, MAX_EARLY_RECORD_MS, medicationTitle, UI_STATUS, UNDO_WINDOW_MS } from './format';
@@ -49,7 +49,7 @@ export function DoseList({ group, userId, doses, now, onGive, onSkip, onUndo }: 
     const scheduled = new Date(slot.scheduledFor);
     const from = new Date(scheduled.getTime() - MAX_EARLY_RECORD_MS);
     // Para una toma de mañana temprano, "desde las 22:00" sería ambiguo: se omite.
-    const sameDay = isoDateIn(zone, from) === isoDateIn(zone, scheduled);
+    const sameDay = isoDateInZone(from, zone) === isoDateInZone(scheduled, zone);
     return sameDay ? `Se puede registrar desde las ${formatTime(from, zone)}` : undefined;
   }
 

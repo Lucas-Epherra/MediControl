@@ -224,6 +224,32 @@ describe('Flujo de cuidado (e2e)', () => {
     expect(history.body.records[0]).toMatchObject({ status: 'SKIPPED', notes: 'Estaba dormida' });
   });
 
+  it('filtra el historial por responsable y estado en la API', async () => {
+    const caregiver = (await api.get('/api/auth/me').set(as('caregiver'))).body;
+    const all = await api.get(`/api/groups/${groupId}/doses`).set(as('viewer')).expect(200);
+    expect(all.body.recorders).toEqual([{ id: caregiver.id, name: 'caregiver' }]);
+
+    const skipped = await api
+      .get(`/api/groups/${groupId}/doses?status=SKIPPED&recordedById=${caregiver.id}`)
+      .set(as('viewer'))
+      .expect(200);
+    expect(skipped.body.records.length).toBeGreaterThan(0);
+    expect(
+      skipped.body.records.every(
+        (r: { status: string; recordedBy: { id: string } }) =>
+          r.status === 'SKIPPED' && r.recordedBy.id === caregiver.id,
+      ),
+    ).toBe(true);
+
+    const given = await api.get(`/api/groups/${groupId}/doses?status=GIVEN`).set(as('viewer')).expect(200);
+    expect(given.body.records).toEqual([]);
+    // Los responsables del período no dependen de los otros filtros.
+    expect(given.body.recorders).toEqual(all.body.recorders);
+
+    await api.get(`/api/groups/${groupId}/doses?status=OTRO`).set(as('viewer')).expect(400);
+    await api.get(`/api/groups/${groupId}/doses?recordedById=no-es-uuid`).set(as('viewer')).expect(400);
+  });
+
   it('el grupo no puede quedarse sin administrador', async () => {
     const me = await api.get('/api/auth/me').set(as('admin'));
     await api

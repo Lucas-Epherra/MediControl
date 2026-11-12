@@ -14,25 +14,7 @@ export interface Session {
 /** Estados de una toma en la vista del día (docs/ARQUITECTURA.md §3.4). */
 export type DoseSlotStatus = 'GIVEN' | 'SKIPPED' | 'DUE' | 'UPCOMING' | 'OVERDUE';
 
-export interface MedicationSummary {
-  id: string;
-  name: string;
-  strength: string | null;
-  form: string | null;
-  instructions: string | null;
-}
-
-export interface DoseRecord {
-  id: string;
-  scheduleId: string;
-  scheduledFor: string;
-  status: 'GIVEN' | 'SKIPPED';
-  unitsGiven: number;
-  notes: string | null;
-  recordedAt: string;
-  recordedBy: { id: string; name: string };
-}
-
+/** Respuesta de GET /groups/:groupId/day (un elemento de `doses`). */
 export interface DaySlot {
   key: string;
   scheduleId: string;
@@ -61,12 +43,6 @@ export interface Alert {
   data: Record<string, number | string | null>;
 }
 
-export interface Medication extends MedicationSummary {
-  stock: number;
-  lowStockThreshold: number;
-  active: boolean;
-}
-
 export interface Group {
   id: string;
   name: string;
@@ -74,4 +50,59 @@ export interface Group {
   notes: string | null;
   timezone: string;
   myRole: GroupRole;
+}
+
+/** `medicationSelect` de apps/api/src/doses/doses.service.ts. */
+export interface MedicationSummary {
+  id: string;
+  name: string;
+  strength: string | null;
+  form: string | null;
+  instructions: string | null;
+}
+
+export type DoseRecordStatus = 'GIVEN' | 'SKIPPED';
+
+/** `presentRecord` de apps/api/src/doses/doses.service.ts. */
+export interface DoseRecord {
+  id: string;
+  scheduleId: string;
+  scheduledFor: string;
+  status: DoseRecordStatus;
+  unitsGiven: number;
+  notes: string | null;
+  recordedAt: string;
+  recordedBy: { id: string; name: string };
+}
+
+/** Respuesta de GET /groups/:groupId/doses. */
+export interface DoseHistory {
+  from: string;
+  to: string;
+  timezone: string;
+  /** Quienes registraron tomas en el período, sin aplicar los demás filtros. */
+  recorders: { id: string; name: string }[];
+  records: (DoseRecord & { medication: MedicationSummary })[];
+}
+
+export interface Schedule {
+  id: string;
+  medicationId: string;
+  timeOfDay: string;
+  daysOfWeek: number[];
+  unitsPerDose: number;
+  startDate: string;
+  endDate: string | null;
+  active: boolean;
+}
+
+/** `present` de apps/api/src/medications/medications.service.ts. */
+export interface Medication extends MedicationSummary {
+  groupId: string;
+  stock: number;
+  lowStockThreshold: number;
+  active: boolean;
+  schedules: Schedule[];
+  dailyUnits: number;
+  coverageDays: number | null;
 }

@@ -54,6 +54,9 @@ function useRefreshDay(groupId: string) {
     Promise.all([
       queryClient.invalidateQueries({ queryKey: queryKeys.days(groupId) }),
       queryClient.invalidateQueries({ queryKey: queryKeys.alerts(groupId) }),
+      // Historial (lib/history.ts) y medicamentos con su stock (lib/medications.ts).
+      queryClient.invalidateQueries({ queryKey: ['groups', groupId, 'doses'] }),
+      queryClient.invalidateQueries({ queryKey: ['groups', groupId, 'medications'] }),
     ]);
 }
 
