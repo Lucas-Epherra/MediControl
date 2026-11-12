@@ -165,6 +165,7 @@ fija el conteo real.
 | Método | Ruta | Rol |
 |---|---|---|
 | GET | `/groups/:groupId/day?date=YYYY-MM-DD` | Miembro (sin `date` = hoy en la zona del grupo) |
+| GET | `/groups/:groupId/day/summary?date=YYYY-MM-DD` | Miembro — `{ date, text }`: resumen del día en texto plano para compartir por WhatsApp (por estado, con responsable y motivo; si es hoy, también los avisos). Sin emojis |
 | POST | `/groups/:groupId/doses` | ADMIN, CAREGIVER |
 | DELETE | `/groups/:groupId/doses/:doseId` | Quien registró (24 h) o ADMIN — marca la toma como deshecha (no la borra) |
 | GET | `/groups/:groupId/doses?from=&to=&medicationId=&recordedById=&status=&undone=` | Miembro — historial; incluye `recorders` del período. `undone=true` solo deshechas, `false` solo vigentes, sin indicar todas |

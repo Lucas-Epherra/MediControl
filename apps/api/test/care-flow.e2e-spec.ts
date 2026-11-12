@@ -128,6 +128,18 @@ describe('Flujo de cuidado (e2e)', () => {
     expect(new Date(dose.scheduledFor).toISOString()).toBe(new Date(scheduledFor).toISOString());
   });
 
+  it('arma el resumen del día para compartir, también para el VIEWER', async () => {
+    const slot = DateTime.fromISO(scheduledFor).setZone(ZONE);
+    const res = await api
+      .get(`/api/groups/${groupId}/day/summary?date=${slot.toISODate()}`)
+      .set(as('viewer'))
+      .expect(200);
+    expect(res.body.date).toBe(slot.toISODate());
+    expect(res.body.text).toContain('*MediControl · Marta*');
+    expect(res.body.text).toContain(`*Toca ahora (1)*\n- ${slot.toFormat('HH:mm')} Enalapril 10 mg`);
+    await api.get(`/api/groups/${groupId}/day/summary`).set(as('outsider')).expect(404);
+  });
+
   it('el VIEWER no puede registrar tomas', async () => {
     await api
       .post(`/api/groups/${groupId}/doses`)
