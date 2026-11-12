@@ -3,12 +3,12 @@
 import { useId, useState, type FormEvent } from 'react';
 import { FormAlert } from '@/components/forms';
 import { InfoIcon, SpinnerIcon } from '@/components/icons';
-import { Button, Modal, StatusBadge, Stepper } from '@/components/ui';
+import { Button, Modal, StatusBadge } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { formatTime } from '@/lib/dates';
-import { useMedication, useRecordDose, useRestock } from '@/lib/queries';
+import { useRecordDose } from '@/lib/queries';
 import type { DaySlot, DoseRecord } from '@/lib/types';
-import { doseDetail, medicationTitle, unitsLabel } from './format';
+import { doseDetail, medicationTitle } from './format';
 
 const textareaClass =
   'box-border w-full rounded-btn border-2 border-muted px-3.5 py-3 font-sans text-base text-ink focus-visible:border-primary';
@@ -241,86 +241,6 @@ export function ConflictDialog({
           </p>
           <Button onClick={onClose}>Entendido</Button>
         </div>
-      )}
-    </Modal>
-  );
-}
-
-export function RestockDialog({
-  groupId,
-  medicationId,
-  onClose,
-  onDone,
-}: {
-  groupId: string;
-  medicationId: string | null;
-  onClose: () => void;
-  onDone: (message: string) => void;
-}) {
-  const medication = useMedication(groupId, medicationId ?? undefined);
-  const restock = useRestock(groupId);
-  const [quantity, setQuantity] = useState(30);
-  const med = medication.data;
-  const form = med?.form ?? 'unidades';
-
-  function close() {
-    setQuantity(30);
-    restock.reset();
-    onClose();
-  }
-
-  function confirm(event: FormEvent) {
-    event.preventDefault();
-    if (!medicationId || !med || quantity <= 0) return;
-    restock.mutate(
-      { medicationId, quantity },
-      {
-        onSuccess: ({ stock }) => {
-          onDone(`Stock actualizado: ${med.name}, ${unitsLabel(stock, med.form)}.`);
-          close();
-        },
-      },
-    );
-  }
-
-  return (
-    <Modal
-      open={!!medicationId}
-      onOpenChange={(open) => !open && close()}
-      title="Reponer stock"
-      description={med ? `${medicationTitle(med)} · ${form}` : undefined}
-    >
-      {medication.isPending ? (
-        <p role="status" className="flex items-center justify-center gap-2 text-muted">
-          <SpinnerIcon size={22} /> Cargando…
-        </p>
-      ) : medication.isError || !med ? (
-        <FormAlert>{medication.error?.message ?? 'No se pudo cargar el medicamento.'}</FormAlert>
-      ) : (
-        <form onSubmit={confirm} className="flex w-full flex-col gap-4 text-left">
-          <div className="flex justify-between gap-3 rounded-btn bg-ahora-tint px-3.5 py-3 text-ahora-text">
-            <span>Stock actual</span>
-            <b>{unitsLabel(med.stock, med.form)}</b>
-          </div>
-          <div className="flex flex-col gap-2">
-            <span className="font-bold">Cantidad que agregás</span>
-            <Stepper value={quantity} onChange={setQuantity} min={0} step={1} label={`${form} de ${med.name}`} />
-          </div>
-          <p className="text-[19px]">
-            Nuevo stock: <b>{unitsLabel(med.stock + quantity, med.form)}</b>
-          </p>
-          {restock.isError && <FormAlert>{restock.error.message}</FormAlert>}
-          <Button
-            type="submit"
-            disabled={quantity <= 0 || restock.isPending}
-            icon={restock.isPending ? <SpinnerIcon size={22} /> : undefined}
-          >
-            {restock.isPending ? 'Guardando…' : 'Confirmar'}
-          </Button>
-          <Button type="button" variant="secondary" onClick={close}>
-            Cancelar
-          </Button>
-        </form>
       )}
     </Modal>
   );

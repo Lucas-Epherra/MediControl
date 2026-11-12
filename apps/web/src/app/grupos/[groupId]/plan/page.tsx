@@ -25,7 +25,7 @@ import type { Medication } from '@/lib/types';
 export default function PlanPage() {
   const group = useGroup();
   const [showArchived, setShowArchived] = useState(false);
-  const [stock, setStock] = useState<{ medication: Medication; type: StockMovementType } | null>(null);
+  const [stock, setStock] = useState<{ medicationId: string; type: StockMovementType } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   const medications = useMedications(group.id);
@@ -114,7 +114,7 @@ export default function PlanPage() {
                     canAdjust={canAdjust}
                     onStock={(type) => {
                       setNotice(null);
-                      setStock({ medication: m, type });
+                      setStock({ medicationId: m.id, type });
                     }}
                   />
                 ))}
@@ -204,7 +204,7 @@ export default function PlanPage() {
       {stock && (
         <StockDialog
           groupId={group.id}
-          medication={stock.medication}
+          medicationId={stock.medicationId}
           type={stock.type}
           onClose={() => setStock(null)}
           onDone={setNotice}
