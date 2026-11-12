@@ -78,8 +78,8 @@ export function MedicationForm({
   const [form, setForm] = useState(medication?.form ?? 'comprimidos');
   const [instructions, setInstructions] = useState(medication?.instructions ?? '');
   const [unitsPerDose, setUnitsPerDose] = useState(original[0]?.unitsPerDose ?? 1);
-  const [stock, setStock] = useState('0');
-  const [threshold, setThreshold] = useState(String(medication?.lowStockThreshold ?? 0));
+  const [stock, setStock] = useState('');
+  const [threshold, setThreshold] = useState(medication ? String(medication.lowStockThreshold) : '');
   const [rows, setRows] = useState<ScheduleRow[]>(() =>
     editing
       ? original.map((s) => ({
