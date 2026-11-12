@@ -10,7 +10,7 @@ Documentación: `README.md`, `docs/PLAN.md` (alcance, roles, guion de demo), `do
 ## Estructura
 
 ```
-apps/api   NestJS 11 + Prisma 6 + PostgreSQL (backend, terminado y testeado)
+apps/api   NestJS 11 + Prisma 6 + PostgreSQL (backend)
 apps/web   Next.js App Router + TypeScript + Tailwind (frontend)
 docs/      planificación y arquitectura
 ```
@@ -34,8 +34,11 @@ Usuarios de demo (contraseña `demo1234`): `lucas@example.com` (ADMIN), `ana@exa
 
 ## Reglas
 
-- **`apps/api` no se toca.** Si falta algo en el backend, se anota y se avisa a Lucas.
-- Nunca commitear a `main`. Se trabaja en `feat/web`, con commits chicos y mensajes claros.
+- **Filtros y parámetros se resuelven en el backend.** Si una pantalla necesita filtrar u ordenar, se suma el
+  parámetro al endpoint de `apps/api` (DTO, servicio, test e2e y `docs/ARQUITECTURA.md`) y el front solo lo
+  manda; nunca se filtra en el cliente. Quien hace la pantalla hace también ese cambio y lo anota en la issue.
+- Ramas: `main` ← `dev` ← `feat/<tema>`. Cada issue sale de `dev` y vuelve por PR a `dev`. Nunca commitear a `main`.
+  Commits chicos y mensajes claros, sin líneas de atribución (`Co-Authored-By`, "Generated with…").
 - Prioridad: Nivel 1 (login/registro, grupo, vista del día, avisos, reponer stock, historial) →
   Nivel 2 (ABM de plan y recetas) → Nivel 3 (invitaciones y miembros). No pasar de nivel sin terminar el anterior.
 
