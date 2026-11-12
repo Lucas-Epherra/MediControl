@@ -7,9 +7,11 @@ import {
 } from "./icons";
 
 export type DoseStatus = "dada" | "omitida" | "ahora" | "pendiente" | "atrasada";
+/** Estados de recetas y stock, con los mismos colores que las tomas (componente «Badge» del canvas). */
+export type BadgeStatus = DoseStatus | "vigente" | "porvencer" | "vencida" | "stockbajo";
 
 const CONFIG: Record<
-  DoseStatus,
+  BadgeStatus,
   { label: string; classes: string; Icon: typeof CheckIcon }
 > = {
   dada: {
@@ -37,10 +39,30 @@ const CONFIG: Record<
     classes: "bg-atrasada text-white border-atrasada",
     Icon: AlertTriangleIcon,
   },
+  vigente: {
+    label: "Vigente",
+    classes: "bg-dada-tint text-dada border-dada",
+    Icon: CheckIcon,
+  },
+  porvencer: {
+    label: "Por vencer",
+    classes: "bg-ahora-badge text-ahora-text border-ahora",
+    Icon: ClockIcon,
+  },
+  vencida: {
+    label: "Vencida",
+    classes: "bg-atrasada text-white border-atrasada",
+    Icon: AlertTriangleIcon,
+  },
+  stockbajo: {
+    label: "Stock bajo",
+    classes: "bg-ahora-badge text-ahora-text border-ahora",
+    Icon: AlertTriangleIcon,
+  },
 };
 
 export interface StatusBadgeProps {
-  status: DoseStatus;
+  status: BadgeStatus;
   /** Reemplaza el texto por defecto; nunca se omite el texto. */
   text?: string;
   className?: string;

@@ -35,7 +35,7 @@ export class MedicationsController {
 
   @Get()
   list(@Param('groupId') groupId: string, @Query() query: ListMedicationsQuery) {
-    return this.medications.list(groupId, query.includeInactive);
+    return this.medications.list(groupId, query.status ?? (query.includeInactive ? 'all' : 'active'));
   }
 
   @Post()
