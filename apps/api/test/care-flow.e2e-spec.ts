@@ -172,6 +172,49 @@ describe('Flujo de cuidado (e2e)', () => {
     expect(res.body.alerts).toEqual(
       expect.arrayContaining([expect.objectContaining({ type: 'LOW_STOCK', medicationId })]),
     );
+    // El plan marca el mismo medicamento con stock bajo.
+    const list = await api.get(`/api/groups/${groupId}/medications`).set(as('viewer')).expect(200);
+    expect(list.body.find((m: { id: string }) => m.id === medicationId).lowStock).toBe(true);
+  });
+
+  it('lista medicamentos activos, archivados o todos', async () => {
+    const created = await api
+      .post(`/api/groups/${groupId}/medications`)
+      .set(as('admin'))
+      .send({ name: 'Para archivar' })
+      .expect(201);
+    await api.delete(`/api/groups/${groupId}/medications/${created.body.id}`).set(as('admin')).expect(204);
+
+    const ids = async (query: string) =>
+      (await api.get(`/api/groups/${groupId}/medications${query}`).set(as('viewer')).expect(200)).body.map(
+        (m: { id: string }) => m.id,
+      );
+    expect(await ids('')).not.toContain(created.body.id);
+    expect(await ids('?status=archived')).toEqual([created.body.id]);
+    expect(await ids('?status=all')).toEqual(expect.arrayContaining([created.body.id, medicationId]));
+    expect(await ids('?includeInactive=true')).toEqual(await ids('?status=all'));
+    await api.get(`/api/groups/${groupId}/medications?status=otro`).set(as('viewer')).expect(400);
+  });
+
+  it('informa el estado de cada receta', async () => {
+    const today = DateTime.now().setZone(ZONE);
+    const create = (description: string, days: number) =>
+      api
+        .post(`/api/groups/${groupId}/prescriptions`)
+        .set(as('admin'))
+        .send({ description, expiresAt: today.plus({ days }).toISODate() })
+        .expect(201);
+    const expiring = await create('Por vencer', 3);
+    expect(expiring.body).toMatchObject({ status: 'EXPIRING', daysLeft: 3 });
+    await create('Vencida', -2);
+    await create('Vigente', 40);
+
+    const list = await api.get(`/api/groups/${groupId}/prescriptions`).set(as('viewer')).expect(200);
+    expect(list.body.map((p: { description: string; status: string }) => [p.description, p.status])).toEqual([
+      ['Vencida', 'EXPIRED'],
+      ['Por vencer', 'EXPIRING'],
+      ['Vigente', 'VALID'],
+    ]);
   });
 
   it('impide usar un horario de otro grupo', async () => {
@@ -191,13 +234,19 @@ describe('Flujo de cuidado (e2e)', () => {
       .expect(404);
   });
 
-  it('deshacer devuelve el stock y libera la toma', async () => {
+  it('deshacer devuelve el stock, libera la toma y la deja en el historial', async () => {
     const day = await api.get(`/api/groups/${groupId}/day`).set(as('admin')).expect(200);
     const dose = day.body.doses.find((d: { scheduleId: string }) => d.scheduleId === scheduleId);
     const recordId = dose.record.id;
 
     await api.delete(`/api/groups/${groupId}/doses/${recordId}`).set(as('viewer')).expect(403);
     await api.delete(`/api/groups/${groupId}/doses/${recordId}`).set(as('admin')).expect(204);
+    // Deshacer dos veces no devuelve el stock dos veces.
+    await api.delete(`/api/groups/${groupId}/doses/${recordId}`).set(as('admin')).expect(409);
+
+    const after = await api.get(`/api/groups/${groupId}/day`).set(as('admin')).expect(200);
+    const freed = after.body.doses.find((d: { scheduleId: string }) => d.scheduleId === scheduleId);
+    expect(freed.record).toBeNull();
 
     const medication = await api
       .get(`/api/groups/${groupId}/medications/${medicationId}`)
@@ -220,8 +269,53 @@ describe('Flujo de cuidado (e2e)', () => {
       .set(as('caregiver'))
       .send({ scheduleId, scheduledFor, status: 'SKIPPED', notes: 'Estaba dormida' })
       .expect(201);
+
+    // La toma deshecha sigue en el historial, con quién la deshizo; la nueva queda vigente.
     const history = await api.get(`/api/groups/${groupId}/doses`).set(as('viewer')).expect(200);
-    expect(history.body.records[0]).toMatchObject({ status: 'SKIPPED', notes: 'Estaba dormida' });
+    const records = history.body.records as { id: string; status: string; notes: string | null; undoneAt: string | null; undoneBy: { name: string } | null }[];
+    expect(records.find((r) => r.id === recordId)).toMatchObject({
+      status: 'GIVEN',
+      undoneBy: { name: 'admin' },
+    });
+    expect(records.find((r) => r.undoneAt === null)).toMatchObject({
+      status: 'SKIPPED',
+      notes: 'Estaba dormida',
+      undoneBy: null,
+    });
+
+    const onlyUndone = await api.get(`/api/groups/${groupId}/doses?undone=true`).set(as('viewer')).expect(200);
+    expect(onlyUndone.body.records.map((r: { id: string }) => r.id)).toEqual([recordId]);
+  });
+
+  it('filtra el historial por responsable y estado en la API', async () => {
+    const caregiver = (await api.get('/api/auth/me').set(as('caregiver'))).body;
+    const all = await api.get(`/api/groups/${groupId}/doses`).set(as('viewer')).expect(200);
+    // La toma deshecha también cuenta: según quién ganó la carrera, admin puede aparecer.
+    expect(all.body.recorders).toContainEqual({ id: caregiver.id, name: 'caregiver' });
+
+    const skipped = await api
+      .get(`/api/groups/${groupId}/doses?status=SKIPPED&recordedById=${caregiver.id}`)
+      .set(as('viewer'))
+      .expect(200);
+    expect(skipped.body.records.length).toBeGreaterThan(0);
+    expect(
+      skipped.body.records.every(
+        (r: { status: string; recordedBy: { id: string } }) =>
+          r.status === 'SKIPPED' && r.recordedBy.id === caregiver.id,
+      ),
+    ).toBe(true);
+
+    // La única toma dada se deshizo: entre las vigentes no queda ninguna dada.
+    const given = await api
+      .get(`/api/groups/${groupId}/doses?status=GIVEN&undone=false`)
+      .set(as('viewer'))
+      .expect(200);
+    expect(given.body.records).toEqual([]);
+    // Los responsables del período no dependen de los otros filtros.
+    expect(given.body.recorders).toEqual(all.body.recorders);
+
+    await api.get(`/api/groups/${groupId}/doses?status=OTRO`).set(as('viewer')).expect(400);
+    await api.get(`/api/groups/${groupId}/doses?recordedById=no-es-uuid`).set(as('viewer')).expect(400);
   });
 
   it('el grupo no puede quedarse sin administrador', async () => {

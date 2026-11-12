@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, StockMovementType, type Medication, type Schedule } from '@prisma/client';
+import { stockAlert } from '../alerts/alerts.calc';
 import { dateOnlyToIso, isoToDateOnly, todayInZone } from '../common/dates';
 import { averageDailyUnits, isInEffect } from '../doses/occurrences';
 import { PrismaService } from '../prisma/prisma.service';
@@ -15,17 +16,17 @@ import {
 export class MedicationsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async list(groupId: string, includeInactive = false) {
+  async list(groupId: string, status: 'active' | 'archived' | 'all' = 'active') {
     const [zone, medications] = await Promise.all([
       this.groupZone(groupId),
       this.prisma.medication.findMany({
-        where: { groupId, ...(includeInactive ? {} : { active: true }) },
+        where: { groupId, ...(status === 'all' ? {} : { active: status === 'active' }) },
         include: { schedules: { orderBy: { timeOfDay: 'asc' } } },
         orderBy: { name: 'asc' },
       }),
     ]);
     const today = todayInZone(zone);
-    return medications.map((m) => present(m, today, includeInactive));
+    return medications.map((m) => present(m, today, status !== 'active'));
   }
 
   async get(groupId: string, medicationId: string) {
@@ -33,7 +34,7 @@ export class MedicationsService {
       this.groupZone(groupId),
       this.findMedication(groupId, medicationId, { schedules: { orderBy: { timeOfDay: 'asc' } } }),
     ]);
-    return present(medication, todayInZone(zone), true);
+    return present(medication, todayInZone(zone), false);
   }
 
   async create(groupId: string, userId: string, dto: CreateMedicationDto) {
@@ -219,6 +220,8 @@ export function present(
       : medication.schedules.filter((s) => s.active),
     dailyUnits,
     coverageDays: dailyUnits > 0 ? Math.max(0, medication.stock) / dailyUnits : null,
+    // Mismo criterio que el aviso LOW_STOCK de /alerts.
+    lowStock: medication.active && stockAlert({ ...medication, dailyUnits }) !== null,
   };
 }
 

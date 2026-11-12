@@ -1,4 +1,4 @@
-import { prescriptionAlert, stockAlert } from './alerts.calc';
+import { prescriptionAlert, prescriptionStatus, stockAlert } from './alerts.calc';
 
 const med = { id: 'm1', name: 'Enalapril', form: 'comprimidos', lowStockThreshold: 6, dailyUnits: 2 };
 
@@ -41,5 +41,14 @@ describe('prescriptionAlert', () => {
     const expired = prescriptionAlert({ ...p, expiresAtIso: '2026-11-10' }, '2026-11-11');
     expect(expired?.type).toBe('PRESCRIPTION_EXPIRED');
     expect(expired?.message).toBe('Receta Enalapril: venció hace 1 día');
+  });
+});
+
+describe('prescriptionStatus', () => {
+  it('distingue vigente, por vencer y vencida', () => {
+    expect(prescriptionStatus('2026-11-30', '2026-11-12')).toEqual({ status: 'VALID', daysLeft: 18 });
+    expect(prescriptionStatus('2026-11-19', '2026-11-12')).toEqual({ status: 'EXPIRING', daysLeft: 7 });
+    expect(prescriptionStatus('2026-11-12', '2026-11-12')).toEqual({ status: 'EXPIRING', daysLeft: 0 });
+    expect(prescriptionStatus('2026-11-10', '2026-11-12')).toEqual({ status: 'EXPIRED', daysLeft: -2 });
   });
 });

@@ -36,7 +36,8 @@ model User {
   memberships         Membership[]
   invitationsSent     Invitation[]    @relation("InvitationCreatedBy")
   invitationsAccepted Invitation[]    @relation("InvitationAcceptedBy")
-  doseRecords         DoseRecord[]
+  doseRecords         DoseRecord[]    @relation("DoseRecordRecordedBy")
+  doseRecordsUndone   DoseRecord[]    @relation("DoseRecordUndoneBy")
   stockMovements      StockMovement[]
 }
 
@@ -150,15 +151,21 @@ model DoseRecord {
   notes        String?
   recordedById String     @db.Uuid
   recordedAt   DateTime   @default(now())
+  /// Deshacer no borra: marca la toma para que quede en el historial con quién la deshizo.
+  undoneAt     DateTime?
+  undoneById   String?    @db.Uuid
 
   group          CareGroup       @relation(fields: [groupId], references: [id], onDelete: Cascade)
   medication     Medication      @relation(fields: [medicationId], references: [id], onDelete: Cascade)
   schedule       Schedule        @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-  recordedBy     User            @relation(fields: [recordedById], references: [id])
+  recordedBy     User            @relation("DoseRecordRecordedBy", fields: [recordedById], references: [id])
+  undoneBy       User?           @relation("DoseRecordUndoneBy", fields: [undoneById], references: [id])
   stockMovements StockMovement[]
 
-  /// Evita que dos cuidadores registren la misma toma programada.
-  @@unique([scheduleId, scheduledFor])
+  /// Evita que dos cuidadores registren la misma toma programada. En la base el índice es
+  /// NULLS NOT DISTINCT (ver la migración deshacer_auditado): solo una toma activa
+  /// (undoneAt nulo) por horario e instante; las deshechas no bloquean volver a registrarla.
+  @@unique([scheduleId, scheduledFor, undoneAt])
   @@index([groupId, scheduledFor])
 }
 

@@ -17,14 +17,18 @@ import { dayBounds, formatTimeInZone, todayInZone } from '../common/dates';
 import { isUniqueViolation } from '../common/prisma-exception.filter';
 import { PrismaService } from '../prisma/prisma.service';
 import { DoseSlotStatus, isTooEarlyToRecord, slotStatus, UNDO_WINDOW_HOURS } from './dose-status';
-import { RecordDoseDto } from './doses.dto';
+import { HistoryQuery, RecordDoseDto } from './doses.dto';
 import { isOccurrence, occurrenceInstant, occursOn } from './occurrences';
 
 const MAX_HISTORY_DAYS = 92;
 
 const recordInclude = {
   recordedBy: { select: { id: true, name: true } },
+  undoneBy: { select: { id: true, name: true } },
 } satisfies Prisma.DoseRecordInclude;
+
+/** Las tomas deshechas quedan en la base para el historial, pero ya no cuentan como registradas. */
+const ACTIVE = { undoneAt: null } satisfies Prisma.DoseRecordWhereInput;
 
 type RecordWithUser = Prisma.DoseRecordGetPayload<{ include: typeof recordInclude }>;
 
@@ -54,7 +58,7 @@ export class DosesService {
         include: { medication: { select: medicationSelect } },
       }),
       this.prisma.doseRecord.findMany({
-        where: { groupId, scheduledFor: { gte: start, lt: end } },
+        where: { groupId, scheduledFor: { gte: start, lt: end }, ...ACTIVE },
         include: {
           ...recordInclude,
           medication: { select: medicationSelect },
@@ -175,10 +179,14 @@ export class DosesService {
     }
   }
 
-  /** Quien registró puede deshacer dentro de la ventana; un ADMIN siempre. */
+  /**
+   * Quien registró puede deshacer dentro de la ventana; un ADMIN siempre. No borra: marca la
+   * toma con quién y cuándo la deshizo, y la toma vuelve a quedar libre para registrarse.
+   */
   async undo(groupId: string, actor: Membership, doseId: string) {
     const record = await this.prisma.doseRecord.findFirst({ where: { id: doseId, groupId } });
     if (!record) throw new NotFoundException('Registro no encontrado');
+    if (record.undoneAt) throw new ConflictException('Esta toma ya se había deshecho');
 
     if (actor.role !== GroupRole.ADMIN) {
       if (record.recordedById !== actor.userId) {
@@ -194,9 +202,13 @@ export class DosesService {
 
     const zone = await this.groupZone(groupId);
     await this.prisma.$transaction(async (tx) => {
-      // deleteMany con id evita restaurar stock dos veces si se deshace en paralelo.
-      const { count } = await tx.doseRecord.deleteMany({ where: { id: record.id } });
-      if (count === 0 || record.unitsGiven <= 0) return;
+      // updateMany con undoneAt nulo evita restaurar stock dos veces si se deshace en paralelo.
+      const { count } = await tx.doseRecord.updateMany({
+        where: { id: record.id, ...ACTIVE },
+        data: { undoneAt: new Date(), undoneById: actor.userId },
+      });
+      if (count === 0) throw new ConflictException('Esta toma ya se había deshecho');
+      if (record.unitsGiven <= 0) return;
       const medication = await tx.medication.update({
         where: { id: record.medicationId },
         data: { stock: { increment: record.unitsGiven } },
@@ -208,13 +220,14 @@ export class DosesService {
           delta: record.unitsGiven,
           stockAfter: medication.stock,
           note: `Se deshizo la toma de las ${formatTimeInZone(record.scheduledFor, zone)}`,
+          doseRecordId: record.id,
           createdById: actor.userId,
         },
       });
     });
   }
 
-  async history(groupId: string, from?: string, to?: string, medicationId?: string) {
+  async history(groupId: string, { from, to, medicationId, recordedById, status, undone }: HistoryQuery) {
     const zone = await this.groupZone(groupId);
     const toIso = to ?? todayInZone(zone);
     const fromIso =
@@ -225,27 +238,40 @@ export class DosesService {
       throw new BadRequestException(`El rango máximo es de ${MAX_HISTORY_DAYS} días`);
     }
 
-    const records = await this.prisma.doseRecord.findMany({
-      where: {
-        groupId,
-        medicationId,
-        scheduledFor: { gte: dayBounds(fromIso, zone).start, lt: dayBounds(toIso, zone).end },
-      },
-      include: { ...recordInclude, medication: { select: medicationSelect } },
-      orderBy: { scheduledFor: 'desc' },
-      take: 1000,
-    });
+    const scheduledFor = { gte: dayBounds(fromIso, zone).start, lt: dayBounds(toIso, zone).end };
+    const [records, recorders] = await Promise.all([
+      this.prisma.doseRecord.findMany({
+        where: {
+          groupId,
+          medicationId,
+          recordedById,
+          status,
+          scheduledFor,
+          undoneAt: undone === undefined ? undefined : undone ? { not: null } : null,
+        },
+        include: { ...recordInclude, medication: { select: medicationSelect } },
+        orderBy: { scheduledFor: 'desc' },
+        take: 1000,
+      }),
+      // Quiénes registraron en el período, sin los demás filtros: alimenta el filtro por responsable.
+      this.prisma.doseRecord.findMany({
+        where: { groupId, scheduledFor },
+        distinct: ['recordedById'],
+        select: { recordedBy: { select: { id: true, name: true } } },
+      }),
+    ]);
     return {
       from: fromIso,
       to: toIso,
       timezone: zone,
+      recorders: recorders.map((r) => r.recordedBy).sort((a, b) => a.name.localeCompare(b.name, 'es')),
       records: records.map((r) => ({ ...presentRecord(r), medication: r.medication })),
     };
   }
 
   private async duplicateConflict(scheduleId: string, scheduledFor: Date, zone: string) {
-    const existing = await this.prisma.doseRecord.findUnique({
-      where: { scheduleId_scheduledFor: { scheduleId, scheduledFor } },
+    const existing = await this.prisma.doseRecord.findFirst({
+      where: { scheduleId, scheduledFor, ...ACTIVE },
       include: recordInclude,
     });
     if (!existing) return new ConflictException('Esta toma ya fue registrada');
@@ -291,5 +317,7 @@ function presentRecord(record: RecordWithUser) {
     notes: record.notes,
     recordedAt: record.recordedAt,
     recordedBy: record.recordedBy,
+    undoneAt: record.undoneAt,
+    undoneBy: record.undoneBy,
   };
 }

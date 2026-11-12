@@ -1,0 +1,12 @@
+# La CLI de Vercel sube el repo; esto queda afuera (secretos, builds y herramientas locales).
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+**/.next
+**/dist
+**/coverage
+.claude
+.impeccable
