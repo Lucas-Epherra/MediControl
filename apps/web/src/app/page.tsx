@@ -1,12 +1,18 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { FullScreenLoader } from '@/components/full-screen-loader';
+import { useSession } from '@/lib/session';
+
 export default function Home() {
-  return (
-    <main className="flex min-h-screen items-center justify-center p-8 text-center">
-      <p className="text-muted">
-        MediControl — la pantalla de ingreso llega con la issue #1.{" "}
-        <a href="/dev/ui" className="text-primary font-bold underline">
-          Ver sistema de diseño
-        </a>
-      </p>
-    </main>
-  );
+  const { status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === 'authenticated') router.replace('/grupos');
+    if (status === 'anonymous') router.replace('/login');
+  }, [status, router]);
+
+  return <FullScreenLoader />;
 }

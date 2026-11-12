@@ -2,7 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
-:focus-visible {
-  outline: 3px solid #9cc9cc;
-  outline-offset: 2px;
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scrollbar-color: theme("colors.line") theme("colors.canvas");
+  }
+
+  body {
+    caret-color: theme("colors.primary.DEFAULT");
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background: theme("colors.primary.tint");
+    color: theme("colors.ink");
+  }
+
+  a {
+    color: theme("colors.primary.DEFAULT");
+    text-underline-offset: 3px;
+  }
+  a:hover {
+    color: theme("colors.primary.hover");
+  }
+
+  :focus-visible {
+    outline: 3px solid theme("colors.primary.ring");
+    outline-offset: 2px;
+  }
+
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
 }

@@ -14,6 +14,10 @@ const config: Config = {
         sm: ["16px", "1.4"],
         card: ["22px", "1.25"],
         h1: ["28px", "1.2"],
+        // Resto de la escala de la hoja: nav (barra inferior), h2 (secciones), display (fecha).
+        nav: ["15px", "1.3"],
+        h2: ["21px", "1.3"],
+        display: ["34px", "1.2"],
       },
       colors: {
         ink: "#17282B",
@@ -35,9 +39,11 @@ const config: Config = {
           badge: "#FFE2AD",
         },
         pendiente: { DEFAULT: "#4A5A5D", tint: "#F3F5F5" },
-        atrasada: { DEFAULT: "#B3261E", tint: "#FCEBEA", card: "#FDF1F0" },
+        atrasada: { DEFAULT: "#B3261E", tint: "#FCEBEA", card: "#FDF1F0", text: "#8C1D17" },
         // Fondo de botón deshabilitado (sección "Botones" de la hoja).
         disabled: "#E3E8E9",
+        // Divisor suave dentro de menús y listas.
+        "line-soft": "#E3E8E9",
       },
       borderRadius: {
         chip: "10px",
