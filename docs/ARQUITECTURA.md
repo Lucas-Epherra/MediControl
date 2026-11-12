@@ -174,7 +174,7 @@ fija el conteo real.
 ### Recetas y avisos
 | Método | Ruta | Rol |
 |---|---|---|
-| GET | `/groups/:groupId/prescriptions` | Miembro — incluye `status` (`VALID` | `EXPIRING` | `EXPIRED`) y `daysLeft` |
+| GET | `/groups/:groupId/prescriptions` | Miembro — incluye `status` (`VALID`, `EXPIRING` o `EXPIRED`) y `daysLeft` |
 | POST / PATCH / DELETE | `/groups/:groupId/prescriptions[/:prescriptionId]` | ADMIN |
 | GET | `/groups/:groupId/alerts` | Miembro |
 
