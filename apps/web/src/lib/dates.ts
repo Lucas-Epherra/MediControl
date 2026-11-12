@@ -29,7 +29,7 @@ export function daysBetween(fromIso: string, toIso: string): number {
 }
 
 /** 'HH:MM' (24 h) del instante en la zona del grupo. */
-export function formatTime(instant: string, zone: string): string {
+export function formatTime(instant: string | Date, zone: string): string {
   return new Intl.DateTimeFormat('es-AR', {
     timeZone: zone,
     hour: '2-digit',
@@ -63,4 +63,17 @@ export function formatShortDate(isoDate: string): string {
   return new Intl.DateTimeFormat('es-AR', { timeZone: 'UTC', day: '2-digit', month: '2-digit' }).format(
     calendarDate(isoDate),
   );
+}
+
+/** 'hace 1 h 17 min' entre dos instantes. */
+export function formatAgo(from: Date, now: Date = new Date()): string {
+  const minutes = Math.max(0, Math.floor((now.getTime() - from.getTime()) / 60_000));
+  if (minutes < 60) return `hace ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest ? `hace ${hours} h ${rest} min` : `hace ${hours} h`;
+}
+
+export function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }

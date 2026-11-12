@@ -15,9 +15,11 @@ export interface DoseCardProps {
   instructions: string;
   status: DoseStatus;
   /** Quién la registró y cuándo (Dada/Omitida), con motivo si corresponde. */
-  registeredBy?: { name: string; time: string; reason?: string };
+  registeredBy?: { name: string; time: string; reason?: string; note?: string };
   /** Solo para Atrasada: hace cuánto debía darse. */
   lateSince?: string;
+  /** Línea de apoyo bajo las indicaciones, por ejemplo "Se puede registrar desde las 06:00". */
+  note?: string;
   /**
    * Qué botones mostrar. El componente no decide permisos: lo resuelve
    * quien lo usa (según rol) y pasa solo las acciones permitidas.
@@ -42,6 +44,7 @@ export function DoseCard({
   status,
   registeredBy,
   lateSince,
+  note,
   actions,
 }: DoseCardProps) {
   return (
@@ -67,6 +70,15 @@ export function DoseCard({
         </div>
       )}
 
+      {/* La nota de quien registró queda a la vista: suele ser lo que necesita saber el próximo turno. */}
+      {registeredBy?.note && (
+        <p className="mt-2 whitespace-pre-line break-words rounded-btn bg-canvas px-3 py-2 text-sm">
+          <b>Nota:</b> {registeredBy.note}
+        </p>
+      )}
+
+      {note && <div className="mt-2 text-sm text-muted">{note}</div>}
+
       {actions && actions.length > 0 && (
         <div className="mt-3.5 flex gap-2.5">
           {actions.map((action) => (
@@ -75,7 +87,10 @@ export function DoseCard({
               variant={action.variant ?? "secondary"}
               icon={action.icon}
               onClick={action.onClick}
-              className="flex-1"
+              // Como en la hoja: la acción principal ocupa más; Deshacer queda a su tamaño.
+              className={
+                action.variant === "primary" ? "flex-[2]" : action.variant === "neutral" ? "" : "flex-1"
+              }
             >
               {action.label}
             </Button>
