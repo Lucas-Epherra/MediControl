@@ -116,8 +116,14 @@ export class StockMovementDto {
 }
 
 export class ListMedicationsQuery {
+  /** Equivale a status=all. Se mantiene por compatibilidad. */
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   includeInactive?: boolean;
+
+  /** active (por defecto), archived (solo archivados) o all. */
+  @IsOptional()
+  @IsIn(['active', 'archived', 'all'])
+  status?: 'active' | 'archived' | 'all';
 }

@@ -69,3 +69,29 @@ export function CloseIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function PencilIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base(props)} strokeWidth={2.2}>
+      <path d="M4 20h4L19 9l-4-4L4 16z" />
+    </svg>
+  );
+}
+
+export function ArchiveIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base(props)} strokeWidth={2.2}>
+      <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
+    </svg>
+  );
+}
+
+export function BoxIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base(props)} strokeWidth={2.2}>
+      <path d="M3 7.5l9-4.5 9 4.5v9l-9 4.5-9-4.5z" />
+      <path d="M3 7.5l9 4.5 9-4.5" />
+      <path d="M12 12v9" />
+    </svg>
+  );
+}

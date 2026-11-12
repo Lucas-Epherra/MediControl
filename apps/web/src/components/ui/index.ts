@@ -1,7 +1,7 @@
 export { Button } from "./Button";
 export type { ButtonProps, ButtonVariant } from "./Button";
 export { StatusBadge } from "./StatusBadge";
-export type { DoseStatus, StatusBadgeProps } from "./StatusBadge";
+export type { BadgeStatus, DoseStatus, StatusBadgeProps } from "./StatusBadge";
 export { DoseCard } from "./DoseCard";
 export type { DoseCardAction, DoseCardProps } from "./DoseCard";
 export { Modal } from "./Modal";

@@ -108,4 +108,5 @@ export interface Medication extends MedicationSummary {
   schedules: Schedule[];
   dailyUnits: number;
   coverageDays: number | null;
+  lowStock: boolean;
 }
