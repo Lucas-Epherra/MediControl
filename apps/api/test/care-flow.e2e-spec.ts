@@ -172,6 +172,30 @@ describe('Flujo de cuidado (e2e)', () => {
     expect(res.body.alerts).toEqual(
       expect.arrayContaining([expect.objectContaining({ type: 'LOW_STOCK', medicationId })]),
     );
+    // El plan marca el mismo medicamento con stock bajo.
+    const list = await api.get(`/api/groups/${groupId}/medications`).set(as('viewer')).expect(200);
+    expect(list.body.find((m: { id: string }) => m.id === medicationId).lowStock).toBe(true);
+  });
+
+  it('informa el estado de cada receta', async () => {
+    const today = DateTime.now().setZone(ZONE);
+    const create = (description: string, days: number) =>
+      api
+        .post(`/api/groups/${groupId}/prescriptions`)
+        .set(as('admin'))
+        .send({ description, expiresAt: today.plus({ days }).toISODate() })
+        .expect(201);
+    const expiring = await create('Por vencer', 3);
+    expect(expiring.body).toMatchObject({ status: 'EXPIRING', daysLeft: 3 });
+    await create('Vencida', -2);
+    await create('Vigente', 40);
+
+    const list = await api.get(`/api/groups/${groupId}/prescriptions`).set(as('viewer')).expect(200);
+    expect(list.body.map((p: { description: string; status: string }) => [p.description, p.status])).toEqual([
+      ['Vencida', 'EXPIRED'],
+      ['Por vencer', 'EXPIRING'],
+      ['Vigente', 'VALID'],
+    ]);
   });
 
   it('impide usar un horario de otro grupo', async () => {

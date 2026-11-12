@@ -50,9 +50,19 @@ export interface PrescriptionInput {
   expiresAtIso: string;
 }
 
+export type PrescriptionStatus = 'VALID' | 'EXPIRING' | 'EXPIRED';
+
+/** Estado de una receta según los días que faltan para su vencimiento (negativo = vencida). */
+export function prescriptionStatus(expiresAtIso: string, todayIso: string) {
+  const daysLeft = daysBetween(todayIso, expiresAtIso);
+  const status: PrescriptionStatus =
+    daysLeft < 0 ? 'EXPIRED' : daysLeft <= PRESCRIPTION_WARNING_DAYS ? 'EXPIRING' : 'VALID';
+  return { status, daysLeft };
+}
+
 export function prescriptionAlert(p: PrescriptionInput, todayIso: string): Alert | null {
-  const daysLeft = daysBetween(todayIso, p.expiresAtIso);
-  if (daysLeft > PRESCRIPTION_WARNING_DAYS) return null;
+  const { status, daysLeft } = prescriptionStatus(p.expiresAtIso, todayIso);
+  if (status === 'VALID') return null;
   const base = {
     prescriptionId: p.id,
     medicationId: p.medicationId ?? undefined,

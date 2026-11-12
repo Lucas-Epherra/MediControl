@@ -143,7 +143,7 @@ Base: `/api`. Documentación interactiva: `/docs` (Swagger).
 ### Plan de medicación y stock
 | Método | Ruta | Rol |
 |---|---|---|
-| GET | `/groups/:groupId/medications?includeInactive=true` | Miembro |
+| GET | `/groups/:groupId/medications?includeInactive=true` | Miembro — incluye `dailyUnits`, `coverageDays` y `lowStock` (mismo criterio que el aviso) |
 | POST | `/groups/:groupId/medications` | ADMIN (admite `schedules[]` en el mismo pedido) |
 | GET / PATCH / DELETE | `/groups/:groupId/medications/:medicationId` | Miembro / ADMIN / ADMIN (archiva) |
 | POST | `/groups/:groupId/medications/:medicationId/schedules` | ADMIN |
@@ -174,7 +174,7 @@ fija el conteo real.
 ### Recetas y avisos
 | Método | Ruta | Rol |
 |---|---|---|
-| GET | `/groups/:groupId/prescriptions` | Miembro |
+| GET | `/groups/:groupId/prescriptions` | Miembro — incluye `status` (`VALID` | `EXPIRING` | `EXPIRED`) y `daysLeft` |
 | POST / PATCH / DELETE | `/groups/:groupId/prescriptions[/:prescriptionId]` | ADMIN |
 | GET | `/groups/:groupId/alerts` | Miembro |
 

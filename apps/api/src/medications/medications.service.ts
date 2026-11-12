@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, StockMovementType, type Medication, type Schedule } from '@prisma/client';
+import { stockAlert } from '../alerts/alerts.calc';
 import { dateOnlyToIso, isoToDateOnly, todayInZone } from '../common/dates';
 import { averageDailyUnits, isInEffect } from '../doses/occurrences';
 import { PrismaService } from '../prisma/prisma.service';
@@ -219,6 +220,8 @@ export function present(
       : medication.schedules.filter((s) => s.active),
     dailyUnits,
     coverageDays: dailyUnits > 0 ? Math.max(0, medication.stock) / dailyUnits : null,
+    // Mismo criterio que el aviso LOW_STOCK de /alerts.
+    lowStock: medication.active && stockAlert({ ...medication, dailyUnits }) !== null,
   };
 }
 
