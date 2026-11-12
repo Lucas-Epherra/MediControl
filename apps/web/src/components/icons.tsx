@@ -132,7 +132,38 @@ export const BoxIcon = (p: IconProps) => (
   </Icon>
 );
 
-export const SpinnerIcon = (p: IconProps) => (
+export const DocumentIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M7 3h7l5 5v13H7z" />
+    <path d="M14 3v5h5" />
+    <path d="M10 13h6M10 17h6" />
+  </Icon>
+);
+
+export const PersonIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21a8 8 0 0 1 16 0" />
+  </Icon>
+);
+
+export const RefreshIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M20 11a8 8 0 0 0-14.5-4.5L4 8" />
+    <path d="M4 3v5h5" />
+    <path d="M4 13a8 8 0 0 0 14.5 4.5L20 16" />
+    <path d="M20 21v-5h-5" />
+  </Icon>
+);
+
+export const UndoIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M9 14l-5-5 5-5" />
+    <path d="M4 9h10a6 6 0 0 1 0 12h-3" />
+  </Icon>
+);
+
+export const SpinnerIcon =(p: IconProps) => (
   <Icon {...p} className={`animate-spin ${p.className ?? ''}`}>
     <path d="M12 3a9 9 0 1 0 9 9" />
   </Icon>
