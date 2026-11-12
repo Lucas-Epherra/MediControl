@@ -53,7 +53,7 @@ export default function HistorialPage() {
   const invalidRange = period === 'rango' ? rangeError(bounds.from, bounds.to, today) : null;
 
   // Los archivados también: su historial sigue existiendo.
-  const medications = useMedications(group.id, { includeInactive: true });
+  const medications = useMedications(group.id, { status: 'all' });
   // Todos los filtros los resuelve la API.
   const history = useDoseHistory(
     group.id,

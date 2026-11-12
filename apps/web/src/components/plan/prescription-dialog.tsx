@@ -18,7 +18,7 @@ export function PrescriptionDialog({
 }: {
   groupId: string;
   prescription?: Prescription;
-  medications: Medication[];
+  medications: Pick<Medication, 'id' | 'name' | 'strength'>[];
   /** Al «Cargar nueva» desde una vencida, se propone el mismo medicamento. */
   initialMedicationId?: string | null;
   onClose: () => void;
@@ -63,7 +63,9 @@ export function PrescriptionDialog({
     );
   }
 
-  const linkable = medications.filter((m) => m.active || m.id === medicationId);
+  // La lista llega con los activos; si la receta apunta a uno archivado, se suma para no perderlo.
+  const linked = prescription?.medication;
+  const linkable = linked && !medications.some((m) => m.id === linked.id) ? [...medications, linked] : medications;
 
   return (
     <Modal

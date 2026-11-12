@@ -28,7 +28,8 @@ export default function PlanPage() {
   const [stock, setStock] = useState<{ medication: Medication; type: StockMovementType } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  const medications = useMedications(group.id, { includeInactive: showArchived });
+  const medications = useMedications(group.id);
+  const archivedQuery = useMedications(group.id, { status: 'archived', enabled: showArchived });
   const agenda = useTodayAgenda(group.id);
   const prescriptions = usePrescriptions(group.id);
   const reactivate = useSetMedicationActive(group.id);
@@ -37,8 +38,8 @@ export default function PlanPage() {
 
   const canEdit = can(group.myRole, 'editPlan');
   const canAdjust = can(group.myRole, 'adjustStock');
-  const active = medications.data?.filter((m) => m.active) ?? [];
-  const archived = medications.data?.filter((m) => !m.active) ?? [];
+  const active = medications.data ?? [];
+  const archived = archivedQuery.data ?? [];
   const dosesToday = agenda.data?.doses.length;
   const prescriptionAlerts = prescriptions.data?.filter((p) => p.status !== 'VALID').length ?? 0;
 
@@ -131,7 +132,11 @@ export default function PlanPage() {
             </label>
 
             {showArchived &&
-              (archived.length === 0 ? (
+              (archivedQuery.isPending ? (
+                <p className="text-muted">Cargando archivados…</p>
+              ) : archivedQuery.isError ? (
+                <FormAlert>{archivedQuery.error.message}</FormAlert>
+              ) : archived.length === 0 ? (
                 <p className="text-muted">No hay medicamentos archivados.</p>
               ) : (
                 <section aria-labelledby="archivados" className="flex flex-col gap-2.5">
@@ -152,6 +157,7 @@ export default function PlanPage() {
                           <Button
                             variant="neutral"
                             disabled={reactivate.isPending}
+                            aria-label={`Volver a activar ${medicationLabel(m)}`}
                             onClick={() => reactivate.mutate({ medicationId: m.id, active: true })}
                           >
                             Volver a activar
@@ -221,7 +227,8 @@ function MedicationItem({
   canAdjust: boolean;
   onStock: (type: StockMovementType) => void;
 }) {
-  const schedules = [...m.schedules].sort((a, b) => a.timeOfDay.localeCompare(b.timeOfDay));
+  // La API los devuelve ordenados por hora.
+  const schedules = m.schedules;
   const units = new Set(schedules.map((s) => s.unitsPerDose));
   const sameDays = new Set(schedules.map((s) => daysLabel(s.daysOfWeek))).size <= 1;
   const info = [

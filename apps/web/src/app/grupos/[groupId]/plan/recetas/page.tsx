@@ -25,7 +25,7 @@ type DialogState = { prescription?: Prescription; medicationId?: string | null }
 export default function RecetasPage() {
   const group = useGroup();
   const prescriptions = usePrescriptions(group.id);
-  const medications = useMedications(group.id, { includeInactive: true });
+  const medications = useMedications(group.id);
   const [dialog, setDialog] = useState<DialogState>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -88,7 +88,7 @@ export default function RecetasPage() {
       ) : list.length === 0 ? (
         <div className="flex flex-col items-start gap-2 rounded-card border border-line bg-white px-5 py-8">
           <p className="text-card font-bold">No hay recetas cargadas</p>
-          <p className="text-muted">Cargalas con su vencimiento y te avisamos 7 días antes en Hoy.</p>
+          <p className="text-muted">Cargalas con su vencimiento y te avisamos en Hoy antes de que venzan.</p>
         </div>
       ) : (
         <ul className="flex flex-col gap-3">
@@ -137,7 +137,7 @@ export default function RecetasPage() {
       )}
 
       <p className="text-sm text-muted">
-        Aviso automático 7 días antes del vencimiento. Las vencidas se muestran en rojo hasta que se carga una nueva.
+        Las recetas por vencer y vencidas también avisan en Hoy. Las vencidas se muestran en rojo hasta que se carga una nueva.
       </p>
 
       {dialog && (

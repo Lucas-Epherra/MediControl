@@ -71,7 +71,8 @@ export function MedicationForm({
   const planHref = `/grupos/${groupId}/plan`;
   const today = todayInZone(timezone);
 
-  const original = medication?.schedules.filter((s) => s.active) ?? [];
+  // El detalle de la API trae solo los horarios activos.
+  const original = medication?.schedules ?? [];
   const [name, setName] = useState(medication?.name ?? '');
   const [strength, setStrength] = useState(medication?.strength ?? '');
   const [form, setForm] = useState(medication?.form ?? 'comprimidos');
@@ -81,9 +82,7 @@ export function MedicationForm({
   const [threshold, setThreshold] = useState(String(medication?.lowStockThreshold ?? 0));
   const [rows, setRows] = useState<ScheduleRow[]>(() =>
     editing
-      ? [...original]
-          .sort((a, b) => a.timeOfDay.localeCompare(b.timeOfDay))
-          .map((s) => ({
+      ? original.map((s) => ({
             key: s.id,
             id: s.id,
             timeOfDay: s.timeOfDay,
@@ -175,8 +174,8 @@ export function MedicationForm({
 
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-6">
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        <div className="flex min-w-0 flex-1 flex-col gap-6">
+      <div className="flex flex-col gap-6 min-[1400px]:grid min-[1400px]:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] min-[1400px]:items-start">
+        <div className="flex min-w-0 flex-col gap-6">
           <fieldset className="flex flex-col gap-4 rounded-card border border-line bg-white p-5 lg:p-6">
             <legend className="px-1.5 text-card font-bold">Medicamento</legend>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -189,8 +188,8 @@ export function MedicationForm({
                 error={fieldError('name')}
               />
               <Field
-                label="Concentración (opcional)"
-                placeholder="Ej.: 10 mg"
+                label="Concentración"
+                placeholder="Opcional. Ej.: 10 mg"
                 value={strength}
                 maxLength={60}
                 onChange={(e) => setStrength(e.target.value)}
@@ -204,7 +203,7 @@ export function MedicationForm({
               />
               <div className="flex flex-col gap-1.5">
                 <span className="font-bold">Unidades por toma</span>
-                <Stepper value={unitsPerDose} onChange={setUnitsPerDose} min={0.5} step={0.5} label="por toma" />
+                <Stepper value={unitsPerDose} onChange={setUnitsPerDose} min={0.5} step={0.5} label="por toma" size="compact" />
                 {fieldError('unitsPerDose') && (
                   <span className="text-sm font-bold text-atrasada">{fieldError('unitsPerDose')}</span>
                 )}
@@ -216,8 +215,8 @@ export function MedicationForm({
               </div>
             </div>
             <Field
-              label="Indicaciones (opcional)"
-              placeholder="Ej.: En ayunas, con las comidas"
+              label="Indicaciones"
+              placeholder="Opcional. Ej.: En ayunas, con las comidas"
               value={instructions}
               maxLength={1000}
               onChange={(e) => setInstructions(e.target.value)}
@@ -257,13 +256,13 @@ export function MedicationForm({
                 value={threshold}
                 onChange={(e) => setThreshold(e.target.value)}
                 error={fieldError('lowStockThreshold')}
-                hint="También avisa si alcanza para 3 días o menos."
+                hint="También avisa si el stock alcanza para pocos días."
               />
             </div>
           </fieldset>
         </div>
 
-        <fieldset className="flex min-w-0 flex-1 flex-col gap-3.5 rounded-card border border-line bg-white p-5 lg:p-6">
+        <fieldset className="flex min-w-0 flex-col gap-3.5 rounded-card border border-line bg-white p-5 lg:p-6">
           <legend className="px-1.5 text-card font-bold">Horarios</legend>
           {rows.length === 0 && (
             <p className="text-muted">Sin horarios el medicamento queda en el plan pero no aparece en Hoy.</p>
@@ -317,13 +316,13 @@ export function MedicationForm({
               )}
               <div className="sm:w-60">
                 <Field
-                  label="Hasta (opcional)"
+                  label="Hasta"
                   type="date"
                   min={today}
                   value={row.endDate}
                   onChange={(e) => updateRow(row.key, { endDate: e.target.value })}
                   error={fieldError(`schedule.${i}.endDate`)}
-                  hint={row.endDate ? undefined : 'Sin fecha de fin.'}
+                  hint={row.endDate ? undefined : 'Opcional. Vacío = sin fecha de fin.'}
                 />
               </div>
             </div>

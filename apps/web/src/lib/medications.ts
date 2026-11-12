@@ -6,11 +6,17 @@ import type { Medication, MedicationSummary, Schedule } from './types';
 
 const medicationsKey = (groupId: string) => ['groups', groupId, 'medications'] as const;
 
-export function useMedications(groupId: string, { includeInactive = false } = {}) {
+export type MedicationListStatus = 'active' | 'archived' | 'all';
+
+/** La API filtra por estado: activos (por defecto), archivados o todos. */
+export function useMedications(
+  groupId: string,
+  { status = 'active', enabled = true }: { status?: MedicationListStatus; enabled?: boolean } = {},
+) {
   return useQuery({
-    queryKey: [...medicationsKey(groupId), { includeInactive }] as const,
-    queryFn: () =>
-      api<Medication[]>(`/groups/${groupId}/medications${includeInactive ? '?includeInactive=true' : ''}`),
+    queryKey: [...medicationsKey(groupId), { status }] as const,
+    queryFn: () => api<Medication[]>(`/groups/${groupId}/medications?status=${status}`),
+    enabled,
   });
 }
 

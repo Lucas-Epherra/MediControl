@@ -14,7 +14,7 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(funct
   const selectId = id ?? autoId;
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
-      <label htmlFor={selectId} className="text-sm font-bold">
+      <label htmlFor={selectId} className="font-bold">
         {label}
       </label>
       <select
