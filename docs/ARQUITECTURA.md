@@ -157,6 +157,7 @@ Base: `/api`. Documentación interactiva: `/docs` (Swagger).
 | PATCH / DELETE | `/groups/:groupId/medications/:medicationId/schedules/:scheduleId` | ADMIN |
 | POST | `/groups/:groupId/medications/:medicationId/stock` | ADMIN, CAREGIVER |
 | GET | `/groups/:groupId/medications/:medicationId/stock-movements` | Miembro |
+| GET | `/groups/:groupId/plan-sheet` | Miembro — hoja del plan para imprimir, ya armada: `slots` (horarios vigentes o futuros agrupados por hora, con `medication`, `dose`, `instructions`, `days` y `period` en texto) y `prescriptions` (por vencimiento, con `status` y `daysLeft`). Sin medicamentos archivados ni horarios vencidos |
 
 `POST .../stock`: `{ "type": "RESTOCK", "quantity": 30 }` suma; `{ "type": "ADJUSTMENT", "quantity": 12 }`
 fija el conteo real.

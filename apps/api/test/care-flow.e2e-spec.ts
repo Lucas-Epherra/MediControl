@@ -140,6 +140,17 @@ describe('Flujo de cuidado (e2e)', () => {
     await api.get(`/api/groups/${groupId}/day/summary`).set(as('outsider')).expect(404);
   });
 
+  it('arma la hoja del plan para imprimir, también para el VIEWER', async () => {
+    const time = DateTime.fromISO(scheduledFor).setZone(ZONE).toFormat('HH:mm');
+    const res = await api.get(`/api/groups/${groupId}/plan-sheet`).set(as('viewer')).expect(200);
+    expect(res.body.patientName).toBe('Marta');
+    expect(res.body.slots).toContainEqual({
+      time,
+      items: [{ medication: 'Enalapril 10 mg', dose: '1 comprimido', instructions: null, days: 'Todos los días', period: null }],
+    });
+    await api.get(`/api/groups/${groupId}/plan-sheet`).set(as('outsider')).expect(404);
+  });
+
   it('el VIEWER no puede registrar tomas', async () => {
     await api
       .post(`/api/groups/${groupId}/doses`)

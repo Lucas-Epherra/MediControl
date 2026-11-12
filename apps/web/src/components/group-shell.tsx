@@ -47,7 +47,7 @@ export function GroupShell({ group, children }: { group: Group; children: ReactN
       <Sidebar group={group} items={items} isCurrent={isCurrent} />
 
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-line bg-white pr-3 pl-2 lg:hidden">
+        <header className="sticky top-0 z-20 flex h-16 print:!hidden items-center justify-between border-b border-line bg-white pr-3 pl-2 lg:hidden">
           <Link
             href="/grupos?elegir=1"
             aria-label={`${group.name}. Cambiar de grupo`}
@@ -58,18 +58,18 @@ export function GroupShell({ group, children }: { group: Group; children: ReactN
           </Link>
           <UserMenu subtitle={`${ROLE_LABEL[group.myRole]} · ${group.name}`} showSwitchGroup />
         </header>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-white px-4 pt-2.5 pb-3 lg:hidden">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-white px-4 pt-2.5 pb-3 lg:hidden print:!hidden">
           <span className="font-bold">{group.patientName}</span>
           <GroupNotes notes={group.notes} />
         </div>
 
-        <main id="contenido" tabIndex={-1} className="pb-[110px] outline-none lg:pb-12">
+        <main id="contenido" tabIndex={-1} className="pb-[110px] outline-none lg:pb-12 print:!pb-0">
           {children}
         </main>
 
         <nav
           aria-label="Principal"
-          className="fixed inset-x-0 bottom-0 z-20 grid h-[76px] border-t border-line bg-white pb-[env(safe-area-inset-bottom)] lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-20 grid h-[76px] print:!hidden border-t border-line bg-white pb-[env(safe-area-inset-bottom)] lg:hidden"
           style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
         >
           {items.map(({ href, label, Icon }) => {
@@ -109,7 +109,7 @@ function Sidebar({
   const router = useRouter();
 
   return (
-    <aside className="sticky top-0 hidden h-dvh w-[264px] flex-none flex-col gap-[22px] overflow-y-auto border-r border-line bg-white px-4 py-5 lg:flex">
+    <aside className="sticky top-0 hidden h-dvh w-[264px] print:!hidden flex-none flex-col gap-[22px] overflow-y-auto border-r border-line bg-white px-4 py-5 lg:flex">
       <Logo size="sm" />
       <div className="flex flex-col gap-1.5 rounded-[14px] bg-canvas p-3.5">
         <span className="text-card font-bold">{group.name}</span>

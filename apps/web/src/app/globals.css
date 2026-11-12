@@ -44,3 +44,13 @@
     text-wrap: balance;
   }
 }
+
+/* Impresión (hoja del plan): fondo blanco y márgenes de página. */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  body {
+    background: #fff;
+  }
+}
