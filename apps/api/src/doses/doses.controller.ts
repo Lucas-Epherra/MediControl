@@ -53,6 +53,6 @@ export class DosesController {
 
   @Get('doses')
   history(@Param('groupId') groupId: string, @Query() query: HistoryQuery) {
-    return this.doses.history(groupId, query.from, query.to, query.medicationId);
+    return this.doses.history(groupId, query);
   }
 }
