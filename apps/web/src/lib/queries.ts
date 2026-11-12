@@ -31,7 +31,6 @@ export function useAlerts(groupId: string) {
   });
 }
 
-
 export interface RecordDoseInput {
   scheduleId: string;
   scheduledFor: string;
@@ -69,7 +68,6 @@ export function useUndoDose(groupId: string) {
     onSettled: refresh,
   });
 }
-
 
 export function useGroups() {
   return useQuery({ queryKey: queryKeys.groups, queryFn: () => api<Group[]>('/groups') });

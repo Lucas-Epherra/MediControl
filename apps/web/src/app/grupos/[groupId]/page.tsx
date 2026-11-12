@@ -8,7 +8,6 @@ import { DayAlerts } from '@/components/hoy/day-alerts';
 import { DaySummary } from '@/components/hoy/day-summary';
 import { ConflictDialog, GiveDialog, SkipDialog, type Conflict } from '@/components/hoy/dialogs';
 import { StockDialog } from '@/components/plan/stock-dialog';
-import { useMedication } from '@/lib/medications';
 import { DoseList } from '@/components/hoy/dose-list';
 import { medicationTitle } from '@/components/hoy/format';
 import { ChevronLeftIcon, ChevronRightIcon, SpinnerIcon } from '@/components/icons';
@@ -180,40 +179,16 @@ function Hoy() {
       />
       <ConflictDialog conflict={conflict} timeZone={group.timezone} onClose={() => setConflict(null)} />
       {restocking && (
-        <RestockFromAlert
+        <StockDialog
           groupId={group.id}
           medicationId={restocking}
+          type="RESTOCK"
           onClose={() => setRestocking(null)}
           onDone={notify}
         />
       )}
       <Toast toast={toast} onDismiss={dismissToast} />
     </div>
-  );
-}
-
-/** El aviso solo trae el id: se carga el medicamento y se abre el mismo diálogo de stock que en Plan. */
-function RestockFromAlert({
-  groupId,
-  medicationId,
-  onClose,
-  onDone,
-}: {
-  groupId: string;
-  medicationId: string;
-  onClose: () => void;
-  onDone: (message: string, tone?: ToastMessage['tone']) => void;
-}) {
-  const medication = useMedication(groupId, medicationId);
-  useEffect(() => {
-    if (medication.isError) {
-      onDone(medication.error.message, 'error');
-      onClose();
-    }
-  }, [medication.isError, medication.error, onDone, onClose]);
-  if (!medication.data) return null;
-  return (
-    <StockDialog groupId={groupId} medication={medication.data} type="RESTOCK" onClose={onClose} onDone={onDone} />
   );
 }
 
