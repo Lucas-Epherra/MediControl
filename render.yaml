@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: medicontrol-api
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: >-
+      corepack enable &&
+      pnpm install --frozen-lockfile &&
+      pnpm --filter api build &&
+      pnpm --filter api exec prisma migrate deploy
+    startCommand: pnpm --filter api start:prod
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: WEB_URL
+        value: http://localhost:3000
+      - key: CORS_ORIGINS
+        value: http://localhost:3000
