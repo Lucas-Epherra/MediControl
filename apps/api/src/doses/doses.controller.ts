@@ -30,6 +30,12 @@ export class DosesController {
     return this.doses.day(groupId, query.date);
   }
 
+  /** Resumen del día en texto plano, listo para compartir. */
+  @Get('day/summary')
+  daySummary(@Param('groupId') groupId: string, @Query() query: DayQuery) {
+    return this.doses.daySummary(groupId, query.date);
+  }
+
   @Post('doses')
   @GroupRoles(GroupRole.ADMIN, GroupRole.CAREGIVER)
   record(

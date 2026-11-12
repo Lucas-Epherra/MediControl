@@ -168,3 +168,10 @@ export const SpinnerIcon =(p: IconProps) => (
     <path d="M12 3a9 9 0 1 0 9 9" />
   </Icon>
 );
+
+export const ShareIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 15V3.5M7.5 8L12 3.5 16.5 8" />
+    <path d="M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5" />
+  </Icon>
+);

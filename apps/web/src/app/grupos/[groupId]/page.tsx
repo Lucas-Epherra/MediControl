@@ -9,6 +9,7 @@ import { DaySummary } from '@/components/hoy/day-summary';
 import { ConflictDialog, GiveDialog, SkipDialog, type Conflict } from '@/components/hoy/dialogs';
 import { StockDialog } from '@/components/plan/stock-dialog';
 import { DoseList } from '@/components/hoy/dose-list';
+import { ShareSummary } from '@/components/hoy/share-summary';
 import { medicationTitle } from '@/components/hoy/format';
 import { ChevronLeftIcon, ChevronRightIcon, SpinnerIcon } from '@/components/icons';
 import { Toast, type ToastMessage } from '@/components/toast';
@@ -153,7 +154,12 @@ function Hoy() {
         </section>
 
         <aside className="order-1 flex min-w-0 flex-[1_1_340px] flex-col gap-6 lg:order-2">
-          {day.data && <DaySummary day={day.data} isToday={shown === today} />}
+          {day.data && (
+            <div className="flex flex-col gap-3">
+              <DaySummary day={day.data} isToday={shown === today} />
+              <ShareSummary groupId={group.id} date={date} notify={notify} />
+            </div>
+          )}
           <DayAlerts
             group={group}
             alerts={alerts.data?.alerts}
