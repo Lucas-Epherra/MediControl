@@ -33,7 +33,7 @@ User ─┬─< Membership >─┬─ CareGroup ─┬─< Medication ─┬─<
 | `Invitation` | groupId, email?, role, tokenHash, expiresAt, acceptedAt, revokedAt | Se guarda solo el hash SHA-256 del token. |
 | `Medication` | name, strength ("10 mg"), form, instructions, stock, lowStockThreshold, active | `stock` en unidades (comprimidos, ml, gotas). Admite medias unidades. |
 | `Schedule` | medicationId, timeOfDay ("08:00"), daysOfWeek[], unitsPerDose, startDate, endDate?, active | `daysOfWeek` vacío = todos los días; 1 = lunes … 7 = domingo. |
-| `DoseRecord` | scheduleId, scheduledFor (UTC), status, recordedById, recordedAt, notes | **`UNIQUE(scheduleId, scheduledFor)`**. Status: `GIVEN`, `SKIPPED`. |
+| `DoseRecord` | scheduleId, scheduledFor (UTC), status, recordedById, recordedAt, notes, undoneAt?, undoneById? | **`UNIQUE(scheduleId, scheduledFor, undoneAt) NULLS NOT DISTINCT`**: una sola toma vigente por ocurrencia. Status: `GIVEN`, `SKIPPED`. Deshacer marca `undoneAt`, no borra. |
 | `StockMovement` | medicationId, type, delta, stockAfter, doseRecordId?, createdById | Tipos: `RESTOCK`, `ADJUSTMENT`, `DOSE`, `DOSE_REVERTED`. |
 | `Prescription` | groupId, medicationId?, description, issuedAt?, expiresAt | Recetas u órdenes médicas. |
 
@@ -54,12 +54,19 @@ ninguna ocurrencia actual.
 
 ### 3.2 Evitar tomas duplicadas (punto técnico)
 
-1. La base garantiza `UNIQUE(scheduleId, scheduledFor)`: si dos cuidadores registran al mismo
-   tiempo, uno de los dos `INSERT` falla aunque las validaciones en código hayan pasado.
+1. La base garantiza `UNIQUE(scheduleId, scheduledFor, undoneAt) NULLS NOT DISTINCT`: si dos
+   cuidadores registran al mismo tiempo, uno de los dos `INSERT` falla aunque las validaciones en
+   código hayan pasado. `NULLS NOT DISTINCT` (PostgreSQL 15+) hace que dos tomas vigentes
+   (`undoneAt` nulo) choquen; las deshechas no impiden volver a registrar. Prisma no expresa esa
+   cláusula: está escrita a mano en la migración `deshacer_auditado`.
 2. El registro y el descuento de stock van en **una transacción**: si el `INSERT` falla, el stock no cambia.
 3. La API responde `409 Conflict` con quién registró la toma y cuándo, para que el front lo muestre.
 4. Además se valida que `scheduledFor` sea una ocurrencia real del horario (hora, día de la semana
    y vigencia) y que no esté a más de 2 h en el futuro.
+5. **Deshacer no borra.** Marca la toma con `undoneAt` y `undoneById`, devuelve el stock (movimiento
+   `DOSE_REVERTED` ligado a la toma) y libera la ocurrencia. La vista del día ignora las deshechas;
+   el historial las muestra con quién las deshizo, junto con su nota original. Deshacer dos veces
+   responde `409`.
 
 ### 3.3 Acceso al grupo (punto técnico)
 
@@ -159,8 +166,8 @@ fija el conteo real.
 |---|---|---|
 | GET | `/groups/:groupId/day?date=YYYY-MM-DD` | Miembro (sin `date` = hoy en la zona del grupo) |
 | POST | `/groups/:groupId/doses` | ADMIN, CAREGIVER |
-| DELETE | `/groups/:groupId/doses/:doseId` | Quien registró (24 h) o ADMIN |
-| GET | `/groups/:groupId/doses?from=&to=&medicationId=&recordedById=&status=` | Miembro — historial; incluye `recorders` del período |
+| DELETE | `/groups/:groupId/doses/:doseId` | Quien registró (24 h) o ADMIN — marca la toma como deshecha (no la borra) |
+| GET | `/groups/:groupId/doses?from=&to=&medicationId=&recordedById=&status=&undone=` | Miembro — historial; incluye `recorders` del período. `undone=true` solo deshechas, `false` solo vigentes, sin indicar todas |
 
 ```jsonc
 // POST /groups/:groupId/doses

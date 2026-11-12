@@ -13,6 +13,8 @@ export interface HistoryFilters {
   medicationId?: string;
   recordedById?: string;
   status?: DoseRecordStatus;
+  /** true: solo deshechas; false: solo vigentes; sin indicar, todas. */
+  undone?: boolean;
 }
 
 export function useDoseHistory(groupId: string, filters: HistoryFilters, enabled = true) {
@@ -20,6 +22,7 @@ export function useDoseHistory(groupId: string, filters: HistoryFilters, enabled
   if (filters.medicationId) params.set('medicationId', filters.medicationId);
   if (filters.recordedById) params.set('recordedById', filters.recordedById);
   if (filters.status) params.set('status', filters.status);
+  if (filters.undone !== undefined) params.set('undone', String(filters.undone));
   return useQuery({
     queryKey: ['groups', groupId, 'doses', filters] as const,
     queryFn: () => api<DoseHistory>(`/groups/${groupId}/doses?${params}`),

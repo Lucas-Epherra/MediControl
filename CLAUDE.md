@@ -1,7 +1,7 @@
 # MediControl
 
 Registro compartido de medicación para coordinar el cuidado de un adulto mayor entre familiares y
-cuidadores. Hackatón de 2 personas: **Lucas** (backend) y **Lorenzo** (frontend). Prima una demo
+cuidadores. Hackatón de 2 personas: **Lucas** y **Lorenzo**; los dos tocan backend y frontend. Prima una demo
 funcionando sobre muchas pantallas a medias.
 
 Documentación: `README.md`, `docs/PLAN.md` (alcance, roles, guion de demo), `docs/ARQUITECTURA.md`

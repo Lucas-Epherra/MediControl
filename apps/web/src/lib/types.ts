@@ -73,6 +73,9 @@ export interface DoseRecord {
   notes: string | null;
   recordedAt: string;
   recordedBy: { id: string; name: string };
+  /** Deshacer no borra la toma: la marca. Solo el historial muestra las deshechas. */
+  undoneAt: string | null;
+  undoneBy: { id: string; name: string } | null;
 }
 
 /** Respuesta de GET /groups/:groupId/doses. */
