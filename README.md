@@ -53,3 +53,18 @@ pnpm test:api:e2e    # e2e contra PostgreSQL (schema "e2e", no toca los datos de
 
 Los e2e cubren los dos puntos técnicos del MVP: acceso restringido al grupo y rechazo de tomas
 duplicadas aunque lleguen en paralelo.
+
+## Despliegue
+
+| Pieza | Dónde | URL |
+|---|---|---|
+| Web | Vercel, proyecto `medicontrol` (equipo FellowshipDevs), raíz `apps/web` | <https://medicontrol-nu.vercel.app> |
+| API | Render, servicio `medicontrol-api` (`render.yaml`, rama `main`) | <https://medicontrol-api-jpv8.onrender.com/api> |
+| Base | Neon (PostgreSQL 16) | — |
+
+- La API se despliega sola al mergear en `main`; el build aplica las migraciones (`prisma migrate deploy`).
+  Las variables `WEB_URL` y `CORS_ORIGINS` se cambian en `render.yaml`, no en el panel de Render.
+- La web todavía no está conectada a GitHub en Vercel: se despliega desde la raíz del repo con
+  `npx vercel deploy --prod` (la primera vez, `npx vercel link --project medicontrol`). `.vercelignore`
+  deja afuera los `.env` y los builds locales.
+- El plan gratuito de Render duerme el servicio: conviene abrir la API un minuto antes de la demo.

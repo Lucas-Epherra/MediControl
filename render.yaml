@@ -21,7 +21,9 @@ services:
         generateValue: true
       - key: JWT_EXPIRES_IN
         value: 7d
+      # Web en Vercel (proyecto medicontrol del equipo FellowshipDevs).
+      # WEB_URL arma los links de invitación; CORS_ORIGINS acepta varios separados por coma.
       - key: WEB_URL
-        value: http://localhost:3000
+        value: https://medicontrol-nu.vercel.app
       - key: CORS_ORIGINS
-        value: http://localhost:3000
+        value: https://medicontrol-nu.vercel.app
