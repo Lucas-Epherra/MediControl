@@ -143,9 +143,9 @@ Base: `/api`. Documentación interactiva: `/docs` (Swagger).
 ### Plan de medicación y stock
 | Método | Ruta | Rol |
 |---|---|---|
-| GET | `/groups/:groupId/medications?includeInactive=true` | Miembro — incluye `dailyUnits`, `coverageDays` y `lowStock` (mismo criterio que el aviso) |
+| GET | `/groups/:groupId/medications?status=active/archived/all` | Miembro — `active` por defecto (`includeInactive=true` equivale a `all`); incluye `dailyUnits`, `coverageDays` y `lowStock` (mismo criterio que el aviso) |
 | POST | `/groups/:groupId/medications` | ADMIN (admite `schedules[]` en el mismo pedido) |
-| GET / PATCH / DELETE | `/groups/:groupId/medications/:medicationId` | Miembro / ADMIN / ADMIN (archiva) |
+| GET / PATCH / DELETE | `/groups/:groupId/medications/:medicationId` | Miembro / ADMIN / ADMIN (archiva). El GET trae solo horarios activos |
 | POST | `/groups/:groupId/medications/:medicationId/schedules` | ADMIN |
 | PATCH / DELETE | `/groups/:groupId/medications/:medicationId/schedules/:scheduleId` | ADMIN |
 | POST | `/groups/:groupId/medications/:medicationId/stock` | ADMIN, CAREGIVER |

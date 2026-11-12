@@ -16,17 +16,17 @@ import {
 export class MedicationsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async list(groupId: string, includeInactive = false) {
+  async list(groupId: string, status: 'active' | 'archived' | 'all' = 'active') {
     const [zone, medications] = await Promise.all([
       this.groupZone(groupId),
       this.prisma.medication.findMany({
-        where: { groupId, ...(includeInactive ? {} : { active: true }) },
+        where: { groupId, ...(status === 'all' ? {} : { active: status === 'active' }) },
         include: { schedules: { orderBy: { timeOfDay: 'asc' } } },
         orderBy: { name: 'asc' },
       }),
     ]);
     const today = todayInZone(zone);
-    return medications.map((m) => present(m, today, includeInactive));
+    return medications.map((m) => present(m, today, status !== 'active'));
   }
 
   async get(groupId: string, medicationId: string) {
@@ -34,7 +34,7 @@ export class MedicationsService {
       this.groupZone(groupId),
       this.findMedication(groupId, medicationId, { schedules: { orderBy: { timeOfDay: 'asc' } } }),
     ]);
-    return present(medication, todayInZone(zone), true);
+    return present(medication, todayInZone(zone), false);
   }
 
   async create(groupId: string, userId: string, dto: CreateMedicationDto) {

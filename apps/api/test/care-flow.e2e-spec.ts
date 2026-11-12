@@ -177,6 +177,25 @@ describe('Flujo de cuidado (e2e)', () => {
     expect(list.body.find((m: { id: string }) => m.id === medicationId).lowStock).toBe(true);
   });
 
+  it('lista medicamentos activos, archivados o todos', async () => {
+    const created = await api
+      .post(`/api/groups/${groupId}/medications`)
+      .set(as('admin'))
+      .send({ name: 'Para archivar' })
+      .expect(201);
+    await api.delete(`/api/groups/${groupId}/medications/${created.body.id}`).set(as('admin')).expect(204);
+
+    const ids = async (query: string) =>
+      (await api.get(`/api/groups/${groupId}/medications${query}`).set(as('viewer')).expect(200)).body.map(
+        (m: { id: string }) => m.id,
+      );
+    expect(await ids('')).not.toContain(created.body.id);
+    expect(await ids('?status=archived')).toEqual([created.body.id]);
+    expect(await ids('?status=all')).toEqual(expect.arrayContaining([created.body.id, medicationId]));
+    expect(await ids('?includeInactive=true')).toEqual(await ids('?status=all'));
+    await api.get(`/api/groups/${groupId}/medications?status=otro`).set(as('viewer')).expect(400);
+  });
+
   it('informa el estado de cada receta', async () => {
     const today = DateTime.now().setZone(ZONE);
     const create = (description: string, days: number) =>
