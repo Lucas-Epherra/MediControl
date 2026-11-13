@@ -114,7 +114,7 @@ function Sidebar({
       <Logo size="sm" />
       <div className="flex flex-col gap-1.5 rounded-[14px] bg-canvas p-3.5">
         <span className="text-card font-bold">{group.name}</span>
-        <span className="text-sm text-muted">Persona cuidada: {group.patientName}</span>
+        <span className="text-sm text-muted">Paciente: {group.patientName}</span>
         <PatientAlerts group={group} compact />
         <DoctorCallLink group={group} />
         <Link

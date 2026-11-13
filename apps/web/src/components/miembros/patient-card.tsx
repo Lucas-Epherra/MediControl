@@ -14,7 +14,7 @@ function ageOn(birthDate: string, today: string) {
   return today.slice(5) < birthDate.slice(5) ? years - 1 : years;
 }
 
-/** Datos de la persona cuidada y nombre del grupo. Solo ADMIN (la página ya lo exige). */
+/** Datos del o la paciente y nombre del grupo. Solo ADMIN (la página ya lo exige). */
 export function PatientCard({ group, onNotify }: { group: Group; onNotify: (text: string) => void }) {
   const update = useUpdateGroup(group.id);
   const today = todayInZone(group.timezone);
@@ -42,7 +42,7 @@ export function PatientCard({ group, onNotify }: { group: Group; onNotify: (text
   function save(event: FormEvent) {
     event.preventDefault();
     const found = {
-      patientName: values.patientName.trim() ? undefined : 'Escribí el nombre de la persona que cuidan',
+      patientName: values.patientName.trim() ? undefined : 'Escribí el nombre del o la paciente',
       patientBirthDate: birth && birth > today ? 'La fecha de nacimiento no puede ser futura' : undefined,
       name: values.name.trim() ? undefined : 'Escribí un nombre para el grupo',
     };
@@ -58,14 +58,14 @@ export function PatientCard({ group, onNotify }: { group: Group; onNotify: (text
         notes: optional(values.notes),
         name: values.name.trim(),
       },
-      { onSuccess: () => onNotify('Datos de la persona cuidada guardados.') },
+      { onSuccess: () => onNotify('Se guardaron los datos del o la paciente.') },
     );
   }
 
   return (
     <section aria-labelledby="paciente-h" className="flex flex-col gap-4 rounded-card border border-line bg-white p-5">
       <h2 id="paciente-h" className="text-h2 font-bold">
-        Persona cuidada
+        Paciente
       </h2>
       <form noValidate onSubmit={save} className="grid gap-4 sm:grid-cols-2">
         <Field
