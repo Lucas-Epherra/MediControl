@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { FormAlert } from '@/components/forms';
 import { Avatar } from '@/components/avatar';
-import { SpinnerIcon, UndoIcon } from '@/components/icons';
+import { ChevronDownIcon, SpinnerIcon, UndoIcon } from '@/components/icons';
 import { Button, Field, SelectField, StatusBadge } from '@/components/ui';
 import { addDays, daysBetween, formatDayHeading, formatShortDate, formatTime, isoDateInZone, todayInZone } from '@/lib/dates';
 import { useGroup } from '@/lib/group-context';
@@ -72,7 +72,10 @@ export default function HistorialPage() {
   const visible = history.data?.records ?? [];
   const people = history.data?.recorders ?? [];
   const days = useMemo(() => groupByDay(history.data?.records ?? [], zone), [history.data, zone]);
-  const hasExtraFilters = medicationId !== '' || recordedById !== '' || status !== 'todos';
+  const activeFilters = [medicationId !== '', recordedById !== '', status !== 'todos'].filter(Boolean).length;
+  const hasExtraFilters = activeFilters > 0;
+  // En celular los filtros extra van plegados: si no, ocupan toda la primera pantalla.
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   return (
     <div className="mx-auto flex max-w-[1100px] flex-col gap-5 px-4 pt-5 pb-8 lg:px-10 lg:pt-10">
@@ -126,7 +129,28 @@ export default function HistorialPage() {
         </div>
 
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:gap-5">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:max-w-[760px] lg:flex-1">
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((open) => !open)}
+            aria-expanded={filtersOpen}
+            aria-controls="historial-filtros"
+            className="flex min-h-touch items-center justify-between gap-2 rounded-btn border-[1.5px] border-line px-4 font-bold text-ink hover:bg-canvas lg:hidden"
+          >
+            <span>
+              Filtros
+              {hasExtraFilters && (
+                <span className="font-normal text-muted">
+                  {' '}
+                  · {activeFilters === 1 ? '1 activo' : `${activeFilters} activos`}
+                </span>
+              )}
+            </span>
+            <ChevronDownIcon size={22} className={`flex-none transition-transform ${filtersOpen ? 'rotate-180' : ''}`} />
+          </button>
+          <div
+            id="historial-filtros"
+            className={`${filtersOpen ? 'grid' : 'hidden'} grid-cols-1 gap-4 sm:grid-cols-3 lg:grid lg:max-w-[760px] lg:flex-1`}
+          >
             <SelectField
               label="Medicamento"
               value={medicationId}

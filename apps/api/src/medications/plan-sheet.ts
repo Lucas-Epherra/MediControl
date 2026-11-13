@@ -6,6 +6,8 @@ import { isInEffect } from '../doses/occurrences';
 export interface PlanSheet {
   date: string;
   patientName: string;
+  /** Alergias de la persona cuidada: en la hoja impresa no está la barra lateral de la app. */
+  allergies: string | null;
   groupName: string;
   notes: string | null;
   slots: { time: string; items: PlanSheetItem[] }[];
@@ -30,7 +32,7 @@ export interface PlanSheetPrescription {
 
 export interface PlanSheetInput {
   today: string;
-  group: { name: string; patientName: string; notes: string | null };
+  group: { name: string; patientName: string; patientAllergies: string | null; notes: string | null };
   medications: {
     name: string;
     strength: string | null;
@@ -93,6 +95,7 @@ export function buildPlanSheet({ today, group, medications, prescriptions }: Pla
   return {
     date: today,
     patientName: group.patientName,
+    allergies: group.patientAllergies?.trim() || null,
     groupName: group.name,
     notes: group.notes?.trim() || null,
     slots,

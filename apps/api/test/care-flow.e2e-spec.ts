@@ -215,6 +215,30 @@ describe('Flujo de cuidado (e2e)', () => {
     expect(medication.body.stock).toBe(6);
   });
 
+  it('cuenta las tomas de cada día para el calendario', async () => {
+    const slot = DateTime.fromISO(scheduledFor).setZone(ZONE);
+    const from = slot.minus({ days: 2 }).toISODate()!;
+    const to = slot.plus({ days: 1 }).toISODate()!;
+    const res = await api.get(`/api/groups/${groupId}/days?from=${from}&to=${to}`).set(as('family')).expect(200);
+    expect(res.body).toMatchObject({ from, to, timezone: ZONE });
+    expect(res.body.days.map((d: { date: string }) => d.date)).toEqual([
+      from,
+      slot.minus({ days: 1 }).toISODate(),
+      slot.toISODate(),
+      to,
+    ]);
+    const [before, yesterday, today, tomorrow] = res.body.days;
+    expect(before.total).toBe(0); // El horario todavía no había empezado.
+    expect(yesterday).toMatchObject({ total: 1, OVERDUE: 1 });
+    expect(today).toMatchObject({ total: 1, GIVEN: 1 });
+    expect(tomorrow).toMatchObject({ total: 1, UPCOMING: 1 });
+
+    await api.get(`/api/groups/${groupId}/days?from=${to}&to=${from}`).set(as('family')).expect(400);
+    await api.get(`/api/groups/${groupId}/days?from=2026-01-01&to=2026-03-31`).set(as('family')).expect(400);
+    await api.get(`/api/groups/${groupId}/days?from=${from}`).set(as('family')).expect(400);
+    await api.get(`/api/groups/${groupId}/days?from=${from}&to=${to}`).set(as('outsider')).expect(404);
+  });
+
   it('avisa stock bajo', async () => {
     const res = await api.get(`/api/groups/${groupId}/alerts`).set(as('family')).expect(200);
     expect(res.body.alerts).toEqual(
