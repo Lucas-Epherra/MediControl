@@ -11,7 +11,7 @@ import { queryKeys } from '@/lib/queries';
 import { ROLE_LABEL } from '@/lib/roles';
 import type { GroupRole } from '@/lib/types';
 
-const ROLE_OPTIONS: GroupRole[] = ['CAREGIVER', 'VIEWER', 'ADMIN'];
+const ROLE_OPTIONS: GroupRole[] = ['CAREGIVER', 'ADMIN'];
 
 interface MemberListProps {
   groupId: string;
@@ -118,7 +118,7 @@ export function MemberList({ groupId, patientName, userId, onNotify, onLeft }: M
                 </div>
               )}
 
-              <div className="md:w-[150px] md:text-right">
+              <div className="md:flex-none">
                 {!lastAdmin && (
                   <Button variant="danger" onClick={() => setRemoving(member)}>
                     {isSelf(member) ? 'Salir del grupo' : 'Quitar'}

@@ -10,7 +10,6 @@ datasource db {
 enum GroupRole {
   ADMIN
   CAREGIVER
-  VIEWER
 }
 
 enum DoseStatus {
@@ -42,14 +41,26 @@ model User {
 }
 
 model CareGroup {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String
-  patientName String
-  notes       String?
+  id                String    @id @default(uuid()) @db.Uuid
+  name              String
+  patientName       String
+  /// Fecha de nacimiento de la persona cuidada (la interfaz muestra la edad).
+  patientBirthDate  DateTime? @db.Date
+  /// Alergias: dato de seguridad, se muestra completo arriba de Hoy.
+  patientAllergies  String?
+  /// Condiciones o diagnósticos relevantes.
+  patientConditions String?
+  /// Notas generales del grupo.
+  notes             String?
+  /// Médico de cabecera. Un solo contacto por ahora; si hacen falta más, pasa a una tabla propia.
+  doctorName        String?
+  doctorSpecialty   String?
+  doctorPhone       String?
+  doctorEmail       String?
   /// Zona horaria IANA usada para calcular los horarios de las tomas.
-  timezone    String   @default("America/Argentina/Buenos_Aires")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  timezone          String    @default("America/Argentina/Buenos_Aires")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   memberships   Membership[]
   invitations   Invitation[]

@@ -23,7 +23,7 @@ lo rechaza indicando quién la dio.
 |---|---|---|
 | F1 | Cuentas | Registro e inicio de sesión con email y contraseña (JWT). |
 | F2 | Grupo de cuidado | Un grupo por persona cuidada (nombre, notas, zona horaria). Quien lo crea es administrador. |
-| F3 | Invitaciones y roles | El administrador genera un enlace de invitación con rol. Roles: `ADMIN`, `CAREGIVER`, `VIEWER`. |
+| F3 | Invitaciones y roles | El administrador genera un enlace de invitación con rol. Roles: `ADMIN` y `CAREGIVER` (el rol observador `VIEWER` se quitó en #26: quien sigue el cuidado también termina dando alguna toma). |
 | F4 | Plan de medicación | Medicamentos (nombre, dosis, unidades por toma, stock, umbral de stock bajo) con uno o varios horarios (hora + días de la semana + vigencia). |
 | F5 | Vista del día | Tomas del día con estado: `GIVEN`, `SKIPPED`, `OVERDUE`, `DUE` (en ventana), `UPCOMING`. |
 | F6 | Registro de tomas | Marcar dada u omitida (con motivo). Guarda hora y responsable. Descuenta stock. Se puede deshacer. |
@@ -52,7 +52,7 @@ lo rechaza indicando quién la dio.
 5. **Como segundo cuidador**, intento marcar la misma toma: recibo `409` con "ya registrada por Ana a las 14:31".
 6. **Como cualquier miembro**, veo en el panel "Enalapril: quedan 5 comprimidos (≈ 2 días)" y
    "Receta de Enalapril vence en 3 días".
-7. **Como observador (`VIEWER`)**, veo todo pero no puedo registrar ni editar.
+7. **Como cuidadora**, registro tomas y repongo stock, pero no edito el plan ni los miembros: eso queda para el administrador.
 8. **Como usuario ajeno al grupo**, cualquier pedido a ese grupo devuelve `404` (no se revela que existe).
 
 ## 4. Reparto de trabajo (propuesta)

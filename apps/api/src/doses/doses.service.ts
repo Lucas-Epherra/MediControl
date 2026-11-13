@@ -15,7 +15,9 @@ import {
 import { DateTime } from 'luxon';
 import { dayBounds, formatTimeInZone, todayInZone } from '../common/dates';
 import { isUniqueViolation } from '../common/prisma-exception.filter';
+import { AlertsService } from '../alerts/alerts.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { formatDaySummary } from './day-summary';
 import { DoseSlotStatus, isTooEarlyToRecord, slotStatus, UNDO_WINDOW_HOURS } from './dose-status';
 import { HistoryQuery, RecordDoseDto } from './doses.dto';
 import { isOccurrence, occurrenceInstant, occursOn } from './occurrences';
@@ -42,7 +44,10 @@ const medicationSelect = {
 
 @Injectable()
 export class DosesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly alerts: AlertsService,
+  ) {}
 
   /** Tomas programadas del día local con su estado, cruzadas con lo registrado. */
   async day(groupId: string, date?: string) {
@@ -112,6 +117,24 @@ export class DosesService {
     for (const dose of doses) summary[dose.status]++;
 
     return { date: isoDate, timezone: zone, now, summary, doses };
+  }
+
+  /** Resumen del día en texto plano para compartir (WhatsApp). Los avisos solo van si es hoy. */
+  async daySummary(groupId: string, date?: string) {
+    const [day, group] = await Promise.all([
+      this.day(groupId, date),
+      this.prisma.careGroup.findUniqueOrThrow({ where: { id: groupId }, select: { patientName: true } }),
+    ]);
+    const isToday = day.date === todayInZone(day.timezone);
+    const alerts = isToday ? (await this.alerts.list(groupId)).alerts.map((a) => a.message) : [];
+    const text = formatDaySummary({
+      patientName: group.patientName,
+      date: day.date,
+      timezone: day.timezone,
+      doses: day.doses,
+      alerts,
+    });
+    return { date: day.date, text };
   }
 
   async record(groupId: string, userId: string, dto: RecordDoseDto) {

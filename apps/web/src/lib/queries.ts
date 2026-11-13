@@ -23,6 +23,20 @@ export function useDay(groupId: string, date?: string) {
   });
 }
 
+/**
+ * Resumen del día en texto (GET /day/summary). Se pide junto con la vista del día para que el
+ * botón copie o comparta al instante: Safari bloquea el portapapeles si antes hay un pedido.
+ * Cuelga de la clave del día, así que se refresca cuando se registra o deshace una toma.
+ */
+export function useDaySummaryText(groupId: string, date?: string) {
+  return useQuery({
+    queryKey: [...queryKeys.day(groupId, date), 'summary'] as const,
+    queryFn: () =>
+      api<{ date: string; text: string }>(`/groups/${groupId}/day/summary${date ? `?date=${date}` : ''}`),
+    ...LIVE,
+  });
+}
+
 export function useAlerts(groupId: string) {
   return useQuery({
     queryKey: queryKeys.alerts(groupId),
@@ -83,7 +97,7 @@ export function useGroupQuery(groupId: string) {
 export interface CreateGroupInput {
   name: string;
   patientName: string;
-  notes?: string;
+  patientAllergies?: string;
 }
 
 export function useCreateGroup() {

@@ -30,7 +30,7 @@ pnpm build:web
 ```
 
 Usuarios de demo (contraseña `demo1234`): `lucas@example.com` (ADMIN), `ana@example.com`
-(CAREGIVER), `sofia@example.com` (VIEWER).
+(CAREGIVER), `sofia@example.com` (CAREGIVER).
 
 ## Reglas
 
@@ -50,8 +50,8 @@ Usuarios de demo (contraseña `demo1234`): `lucas@example.com` (ADMIN), `ana@exa
   Envía `Authorization: Bearer <JWT>`. Ante un **401** cierra sesión y redirige a `/login`.
 - Los tipos de las respuestas reflejan los DTOs reales de `apps/api/src`.
 - Vista del día: se vuelve a pedir cada 30 s y al recuperar el foco de la pestaña (sin WebSocket).
-- Roles en la UI: `VIEWER` no ve botones de registrar ni de editar; solo `ADMIN` edita plan, recetas,
-  grupo, invitaciones y miembros. `CAREGIVER` registra tomas y repone stock.
+- Roles en la UI (solo dos, `ADMIN` y `CAREGIVER`): solo `ADMIN` edita plan, recetas, grupo, invitaciones
+  y miembros. `CAREGIVER` registra tomas y repone stock.
 
 ## Manejo de errores
 

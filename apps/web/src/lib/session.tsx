@@ -13,6 +13,8 @@ interface SessionValue {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  /** Después de editar la cuenta: el token sigue valiendo, cambian los datos que se muestran. */
+  updateUser: (user: AuthUser) => void;
 }
 
 const SessionContext = createContext<SessionValue | null>(null);
@@ -60,6 +62,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       register: async (name, email, password) =>
         start(await api<Session>('/auth/register', { method: 'POST', body: { name, email, password }, anonymous: true })),
       logout: clear,
+      updateUser: setUser,
     }),
     [status, user, start, clear],
   );

@@ -39,7 +39,7 @@ Contraseña `demo1234`, grupo "Cuidado de Marta":
 |---|---|
 | `lucas@example.com` | ADMIN |
 | `ana@example.com` | CAREGIVER |
-| `sofia@example.com` | VIEWER |
+| `sofia@example.com` | CAREGIVER |
 
 El seed genera las tomas a partir de la hora en que se ejecuta: ayer completo, hoy registradas hasta
 hace un rato, una atrasada y el resto pendientes. Conviene volver a correrlo antes de la demo.

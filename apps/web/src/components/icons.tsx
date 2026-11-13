@@ -91,6 +91,12 @@ export const SwitchIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const PhoneIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" />
+  </Icon>
+);
+
 export const InfoIcon = (p: IconProps) => (
   <Icon {...p}>
     <circle cx="12" cy="12" r="9" />
@@ -114,13 +120,6 @@ export const ShieldIcon = (p: IconProps) => (
 export const HeartIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />
-  </Icon>
-);
-
-export const EyeIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-    <circle cx="12" cy="12" r="3" />
   </Icon>
 );
 
@@ -166,5 +165,20 @@ export const UndoIcon = (p: IconProps) => (
 export const SpinnerIcon =(p: IconProps) => (
   <Icon {...p} className={`animate-spin ${p.className ?? ''}`}>
     <path d="M12 3a9 9 0 1 0 9 9" />
+  </Icon>
+);
+
+export const ShareIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 15V3.5M7.5 8L12 3.5 16.5 8" />
+    <path d="M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5" />
+  </Icon>
+);
+
+export const PrinterIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M7 9V3.5h10V9" />
+    <path d="M7 17.5H5A1.5 1.5 0 0 1 3.5 16v-5.5A1.5 1.5 0 0 1 5 9h14a1.5 1.5 0 0 1 1.5 1.5V16a1.5 1.5 0 0 1-1.5 1.5h-2" />
+    <path d="M7 14h10v6.5H7z" />
   </Icon>
 );

@@ -28,8 +28,8 @@ User ─┬─< Membership >─┬─ CareGroup ─┬─< Medication ─┬─<
 | Entidad | Campos clave | Notas |
 |---|---|---|
 | `User` | email (único), passwordHash, name | bcrypt. |
-| `CareGroup` | name, patientName, notes, timezone | `timezone` IANA, por defecto `America/Argentina/Buenos_Aires`. |
-| `Membership` | userId, groupId, role | `UNIQUE(userId, groupId)`. Roles: `ADMIN`, `CAREGIVER`, `VIEWER`. |
+| `CareGroup` | name, patientName, patientBirthDate, patientAllergies, patientConditions, notes, doctorName, doctorSpecialty, doctorPhone, doctorEmail, timezone | Un grupo = una persona cuidada. `timezone` IANA, por defecto `America/Argentina/Buenos_Aires`. Un solo médico de cabecera por ahora (si hacen falta más, tabla propia). |
+| `Membership` | userId, groupId, role | `UNIQUE(userId, groupId)`. Roles: `ADMIN`, `CAREGIVER` (`VIEWER` se quitó en #26; la migración pasó esas membresías a `CAREGIVER`). |
 | `Invitation` | groupId, email?, role, tokenHash, expiresAt, acceptedAt, revokedAt | Se guarda solo el hash SHA-256 del token. |
 | `Medication` | name, strength ("10 mg"), form, instructions, stock, lowStockThreshold, active | `stock` en unidades (comprimidos, ml, gotas). Admite medias unidades. |
 | `Schedule` | medicationId, timeOfDay ("08:00"), daysOfWeek[], unitsPerDose, startDate, endDate?, active | `daysOfWeek` vacío = todos los días; 1 = lunes … 7 = domingo. |
@@ -76,14 +76,14 @@ ninguna ocurrencia actual.
 - Los servicios siempre consultan con `where: { id, groupId }` (o a través de la medicación del grupo),
   así un ID de otro grupo nunca se resuelve aunque se conozca.
 
-| Acción | ADMIN | CAREGIVER | VIEWER |
-|---|:-:|:-:|:-:|
-| Ver día, historial, plan, avisos | ✔ | ✔ | ✔ |
-| Registrar / deshacer toma propia | ✔ | ✔ | — |
-| Deshacer toma de otro | ✔ | — | — |
-| Reponer / ajustar stock | ✔ | ✔ | — |
-| Editar plan, recetas, grupo | ✔ | — | — |
-| Invitar, cambiar roles, quitar miembros | ✔ | — | — |
+| Acción | ADMIN | CAREGIVER |
+|---|:-:|:-:|
+| Ver día, historial, plan, avisos | ✔ | ✔ |
+| Registrar / deshacer toma propia | ✔ | ✔ |
+| Deshacer toma de otro | ✔ | — |
+| Reponer / ajustar stock | ✔ | ✔ |
+| Editar plan, recetas, grupo | ✔ | — |
+| Invitar, cambiar roles, quitar miembros | ✔ | — |
 
 Siempre debe quedar al menos un `ADMIN` en el grupo.
 
@@ -126,6 +126,8 @@ Base: `/api`. Documentación interactiva: `/docs` (Swagger).
 | POST | `/auth/register` | Crear cuenta |
 | POST | `/auth/login` | Iniciar sesión |
 | GET | `/auth/me` | Usuario actual |
+| PATCH | `/auth/me` | Uno mismo — `{ name?, email?, currentPassword? }`. Cambiar el email pide `currentPassword`; si no coincide, **400** (no 401, para no cerrar la sesión). Email ya usado: **409** |
+| PATCH | `/auth/me/password` | Uno mismo — `{ currentPassword, newPassword }` (mínimo 8). Responde 204; la sesión sigue activa |
 
 ### Grupos y miembros
 | Método | Ruta | Rol |
@@ -133,7 +135,7 @@ Base: `/api`. Documentación interactiva: `/docs` (Swagger).
 | GET | `/groups` | Mis grupos con mi rol |
 | POST | `/groups` | Crear grupo (quedo como ADMIN) |
 | GET | `/groups/:groupId` | Miembro |
-| PATCH | `/groups/:groupId` | ADMIN |
+| PATCH | `/groups/:groupId` | ADMIN — también datos de la persona cuidada y del médico. `patientBirthDate` en `YYYY-MM-DD`, `doctorPhone` solo dígitos, espacios, `+`, `-` y paréntesis; `null` borra un dato |
 | GET | `/groups/:groupId/members` | Miembro |
 | PATCH | `/groups/:groupId/members/:userId` | ADMIN — cambiar rol |
 | DELETE | `/groups/:groupId/members/:userId` | ADMIN, o uno mismo para salir |
@@ -157,6 +159,7 @@ Base: `/api`. Documentación interactiva: `/docs` (Swagger).
 | PATCH / DELETE | `/groups/:groupId/medications/:medicationId/schedules/:scheduleId` | ADMIN |
 | POST | `/groups/:groupId/medications/:medicationId/stock` | ADMIN, CAREGIVER |
 | GET | `/groups/:groupId/medications/:medicationId/stock-movements` | Miembro |
+| GET | `/groups/:groupId/plan-sheet` | Miembro — hoja del plan para imprimir, ya armada: `slots` (horarios vigentes o futuros agrupados por hora, con `medication`, `dose`, `instructions`, `days` y `period` en texto) y `prescriptions` (por vencimiento, con `status` y `daysLeft`). Sin medicamentos archivados ni horarios vencidos |
 
 `POST .../stock`: `{ "type": "RESTOCK", "quantity": 30 }` suma; `{ "type": "ADJUSTMENT", "quantity": 12 }`
 fija el conteo real.
@@ -165,6 +168,7 @@ fija el conteo real.
 | Método | Ruta | Rol |
 |---|---|---|
 | GET | `/groups/:groupId/day?date=YYYY-MM-DD` | Miembro (sin `date` = hoy en la zona del grupo) |
+| GET | `/groups/:groupId/day/summary?date=YYYY-MM-DD` | Miembro — `{ date, text }`: resumen del día en texto plano para compartir por WhatsApp (por estado, con responsable y motivo; si es hoy, también los avisos). Sin emojis |
 | POST | `/groups/:groupId/doses` | ADMIN, CAREGIVER |
 | DELETE | `/groups/:groupId/doses/:doseId` | Quien registró (24 h) o ADMIN — marca la toma como deshecha (no la borra) |
 | GET | `/groups/:groupId/doses?from=&to=&medicationId=&recordedById=&status=&undone=` | Miembro — historial; incluye `recorders` del período. `undone=true` solo deshechas, `false` solo vigentes, sin indicar todas |

@@ -7,7 +7,7 @@ import { can, ROLE_LABEL } from '@/lib/roles';
 import { useSession } from '@/lib/session';
 import type { Group } from '@/lib/types';
 import { Avatar } from './avatar';
-import { GroupNotes } from './group-notes';
+import { DoctorCallLink, PatientAlerts } from './patient-info';
 import { CalendarIcon, ChevronDownIcon, ChevronRightIcon, HistoryIcon, LogoutIcon, PeopleIcon, PillIcon } from './icons';
 import { Logo } from './logo';
 import { UserMenu } from './user-menu';
@@ -47,7 +47,7 @@ export function GroupShell({ group, children }: { group: Group; children: ReactN
       <Sidebar group={group} items={items} isCurrent={isCurrent} />
 
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-line bg-white pr-3 pl-2 lg:hidden">
+        <header className="sticky top-0 z-20 flex h-16 print:!hidden items-center justify-between border-b border-line bg-white pr-3 pl-2 lg:hidden">
           <Link
             href="/grupos?elegir=1"
             aria-label={`${group.name}. Cambiar de grupo`}
@@ -58,18 +58,19 @@ export function GroupShell({ group, children }: { group: Group; children: ReactN
           </Link>
           <UserMenu subtitle={`${ROLE_LABEL[group.myRole]} · ${group.name}`} showSwitchGroup />
         </header>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-white px-4 pt-2.5 pb-3 lg:hidden">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-white px-4 pt-2.5 pb-3 lg:hidden print:!hidden">
           <span className="font-bold">{group.patientName}</span>
-          <GroupNotes notes={group.notes} />
+          <PatientAlerts group={group} />
+          <DoctorCallLink group={group} />
         </div>
 
-        <main id="contenido" tabIndex={-1} className="pb-[110px] outline-none lg:pb-12">
+        <main id="contenido" tabIndex={-1} className="pb-[110px] outline-none lg:pb-12 print:!pb-0">
           {children}
         </main>
 
         <nav
           aria-label="Principal"
-          className="fixed inset-x-0 bottom-0 z-20 grid h-[76px] border-t border-line bg-white pb-[env(safe-area-inset-bottom)] lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-20 grid h-[76px] print:!hidden border-t border-line bg-white pb-[env(safe-area-inset-bottom)] lg:hidden"
           style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
         >
           {items.map(({ href, label, Icon }) => {
@@ -109,12 +110,13 @@ function Sidebar({
   const router = useRouter();
 
   return (
-    <aside className="sticky top-0 hidden h-dvh w-[264px] flex-none flex-col gap-[22px] overflow-y-auto border-r border-line bg-white px-4 py-5 lg:flex">
+    <aside className="sticky top-0 hidden h-dvh w-[264px] print:!hidden flex-none flex-col gap-[22px] overflow-y-auto border-r border-line bg-white px-4 py-5 lg:flex">
       <Logo size="sm" />
       <div className="flex flex-col gap-1.5 rounded-[14px] bg-canvas p-3.5">
         <span className="text-card font-bold">{group.name}</span>
         <span className="text-sm text-muted">Persona cuidada: {group.patientName}</span>
-        <GroupNotes notes={group.notes} compact />
+        <PatientAlerts group={group} compact />
+        <DoctorCallLink group={group} />
         <Link
           href="/grupos?elegir=1"
           className="flex min-h-[44px] items-center gap-1.5 self-start text-sm font-bold no-underline"
@@ -148,13 +150,18 @@ function Sidebar({
       </nav>
       {user && (
         <div className="mt-auto flex flex-col gap-3 border-t border-line pt-4">
-          <div className="flex items-center gap-2.5">
+          <Link
+            href="/cuenta"
+            aria-label={`${user.name}, ${ROLE_LABEL[group.myRole]}. Mi cuenta`}
+            className="-mx-2 flex items-center gap-2.5 rounded-btn px-2 py-1.5 text-ink no-underline hover:bg-canvas hover:text-ink"
+          >
             <Avatar name={user.name} muted={group.myRole !== 'ADMIN'} />
-            <span className="flex min-w-0 flex-col leading-tight">
+            <span className="flex min-w-0 flex-1 flex-col leading-tight">
               <b className="truncate">{user.name}</b>
-              <span className="text-sm text-muted">{ROLE_LABEL[group.myRole]}</span>
+              <span className="text-sm text-muted">{ROLE_LABEL[group.myRole]} · Mi cuenta</span>
             </span>
-          </div>
+            <ChevronRightIcon size={18} className="flex-none text-muted" />
+          </Link>
           <button
             type="button"
             onClick={() => {

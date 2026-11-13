@@ -1,8 +1,8 @@
 import { ROLE_LABEL } from '@/lib/roles';
 import type { GroupRole } from '@/lib/types';
-import { EyeIcon, HeartIcon, ShieldIcon } from './icons';
+import { HeartIcon, ShieldIcon } from './icons';
 
-const ICON = { ADMIN: ShieldIcon, CAREGIVER: HeartIcon, VIEWER: EyeIcon } satisfies Record<GroupRole, unknown>;
+const ICON = { ADMIN: ShieldIcon, CAREGIVER: HeartIcon } satisfies Record<GroupRole, unknown>;
 
 export function RoleChip({ role }: { role: GroupRole }) {
   const Icon = ICON[role];

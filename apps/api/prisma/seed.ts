@@ -16,7 +16,7 @@ const PASSWORD = 'demo1234';
 const USERS = [
   { email: 'lucas@example.com', name: 'Lucas', role: GroupRole.ADMIN },
   { email: 'ana@example.com', name: 'Ana', role: GroupRole.CAREGIVER },
-  { email: 'sofia@example.com', name: 'Sofía', role: GroupRole.VIEWER },
+  { email: 'sofia@example.com', name: 'Sofía', role: GroupRole.CAREGIVER },
 ];
 
 const MEDICATIONS = [
@@ -82,7 +82,14 @@ async function main() {
     data: {
       name: 'Cuidado de Marta',
       patientName: 'Marta Gómez',
-      notes: 'Alérgica a la penicilina. Médica de cabecera: Dra. Pérez (2983 41-2233).',
+      patientBirthDate: new Date('1946-05-21T00:00:00Z'),
+      patientAllergies: 'Penicilina',
+      patientConditions: 'Hipertensión, diabetes tipo 2, hipotiroidismo.',
+      notes: 'Usa audífono del lado derecho: hablarle de frente.',
+      doctorName: 'Dra. Laura Pérez',
+      doctorSpecialty: 'Clínica médica',
+      doctorPhone: '2983 41-2233',
+      doctorEmail: 'consultorio.perez@example.com',
       timezone: ZONE,
       memberships: {
         create: USERS.map((u, i) => ({ userId: users[i].id, role: u.role })),
