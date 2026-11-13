@@ -11,7 +11,7 @@ import { queryKeys } from '@/lib/queries';
 import { ROLE_LABEL } from '@/lib/roles';
 import type { GroupRole } from '@/lib/types';
 
-const ROLE_OPTIONS: GroupRole[] = ['CAREGIVER', 'VIEWER', 'ADMIN'];
+const ROLE_OPTIONS: GroupRole[] = ['CAREGIVER', 'ADMIN'];
 
 interface MemberListProps {
   groupId: string;

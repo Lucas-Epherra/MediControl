@@ -1,4 +1,4 @@
-export type GroupRole = 'ADMIN' | 'CAREGIVER' | 'VIEWER';
+export type GroupRole = 'ADMIN' | 'CAREGIVER';
 
 export interface AuthUser {
   id: string;

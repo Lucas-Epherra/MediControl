@@ -16,7 +16,7 @@ const PASSWORD = 'demo1234';
 const USERS = [
   { email: 'lucas@example.com', name: 'Lucas', role: GroupRole.ADMIN },
   { email: 'ana@example.com', name: 'Ana', role: GroupRole.CAREGIVER },
-  { email: 'sofia@example.com', name: 'Sofía', role: GroupRole.VIEWER },
+  { email: 'sofia@example.com', name: 'Sofía', role: GroupRole.CAREGIVER },
 ];
 
 const MEDICATIONS = [

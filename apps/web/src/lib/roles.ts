@@ -27,5 +27,4 @@ export function can(role: GroupRole | undefined, action: Action): boolean {
 export const ROLE_LABEL: Record<GroupRole, string> = {
   ADMIN: 'Administrador',
   CAREGIVER: 'Cuidador',
-  VIEWER: 'Observador',
 };
