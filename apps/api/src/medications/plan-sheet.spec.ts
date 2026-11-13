@@ -7,7 +7,7 @@ describe('buildPlanSheet', () => {
   it('agrupa por hora, ordena por nombre y deja afuera los horarios vencidos', () => {
     const sheet = buildPlanSheet({
       today: '2026-11-12',
-      group: { name: 'Cuidado de Marta', patientName: 'Marta', notes: '  ' },
+      group: { name: 'Cuidado de Marta', patientName: 'Marta', patientAllergies: ' Penicilina ', notes: '  ' },
       medications: [
         {
           name: 'Metformina',
@@ -38,6 +38,7 @@ describe('buildPlanSheet', () => {
     });
 
     expect(sheet.notes).toBeNull();
+    expect(sheet.allergies).toBe('Penicilina');
     expect(sheet.slots).toEqual([
       {
         time: '08:00',

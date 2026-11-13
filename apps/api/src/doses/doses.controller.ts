@@ -15,7 +15,7 @@ import { GroupRole, type Membership } from '@prisma/client';
 import { CurrentMembership, CurrentUser, GroupRoles } from '../common/decorators';
 import type { AuthUser } from '../common/request-context';
 import { GroupAccessGuard } from '../groups/group-access.guard';
-import { DayQuery, HistoryQuery, RecordDoseDto } from './doses.dto';
+import { DayQuery, DaysQuery, HistoryQuery, RecordDoseDto } from './doses.dto';
 import { DosesService } from './doses.service';
 
 @ApiTags('doses')
@@ -34,6 +34,12 @@ export class DosesController {
   @Get('day/summary')
   daySummary(@Param('groupId') groupId: string, @Query() query: DayQuery) {
     return this.doses.daySummary(groupId, query.date);
+  }
+
+  /** Conteo por estado de cada día del rango, para el calendario. */
+  @Get('days')
+  days(@Param('groupId') groupId: string, @Query() query: DaysQuery) {
+    return this.doses.days(groupId, query);
   }
 
   @Post('doses')

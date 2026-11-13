@@ -8,6 +8,7 @@ import type { PrescriptionStatus } from './prescriptions';
 export interface PlanSheet {
   date: string;
   patientName: string;
+  allergies: string | null;
   groupName: string;
   notes: string | null;
   slots: { time: string; items: PlanSheetItem[] }[];

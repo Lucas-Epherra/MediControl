@@ -13,16 +13,18 @@ import {
   type Membership,
 } from '@prisma/client';
 import { DateTime } from 'luxon';
-import { dayBounds, formatTimeInZone, todayInZone } from '../common/dates';
+import { dayBounds, daysBetween, formatTimeInZone, todayInZone } from '../common/dates';
 import { isUniqueViolation } from '../common/prisma-exception.filter';
 import { AlertsService } from '../alerts/alerts.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { formatDaySummary } from './day-summary';
 import { DoseSlotStatus, isTooEarlyToRecord, slotStatus, UNDO_WINDOW_HOURS } from './dose-status';
-import { HistoryQuery, RecordDoseDto } from './doses.dto';
+import { DaysQuery, HistoryQuery, RecordDoseDto } from './doses.dto';
 import { isOccurrence, occurrenceInstant, occursOn } from './occurrences';
 
 const MAX_HISTORY_DAYS = 92;
+/** Tope del calendario: alcanza para dos meses completos. */
+const MAX_CALENDAR_DAYS = 62;
 
 const recordInclude = {
   recordedBy: { select: { id: true, name: true } },
@@ -58,65 +60,57 @@ export class DosesService {
     const now = new Date();
 
     const [schedules, records] = await Promise.all([
-      this.prisma.schedule.findMany({
-        where: { active: true, medication: { groupId, active: true } },
-        include: { medication: { select: medicationSelect } },
-      }),
+      this.activeSchedules(groupId),
       this.prisma.doseRecord.findMany({
         where: { groupId, scheduledFor: { gte: start, lt: end }, ...ACTIVE },
-        include: {
-          ...recordInclude,
-          medication: { select: medicationSelect },
-          schedule: { select: { timeOfDay: true, unitsPerDose: true } },
-        },
+        include: dayRecordInclude,
       }),
     ]);
 
-    const recordsByKey = new Map(records.map((r) => [slotKey(r.scheduleId, r.scheduledFor), r]));
-    const doses: DaySlot[] = [];
+    const doses = buildDaySlots(isoDate, zone, now, schedules, records);
+    return { date: isoDate, timezone: zone, now, summary: countByStatus(doses), doses };
+  }
 
-    for (const schedule of schedules) {
-      if (!occursOn(schedule, isoDate)) continue;
-      const scheduledFor = occurrenceInstant(schedule.timeOfDay, isoDate, zone);
-      const key = slotKey(schedule.id, scheduledFor);
-      const record = recordsByKey.get(key);
-      recordsByKey.delete(key);
-      doses.push({
-        key,
-        scheduleId: schedule.id,
-        scheduledFor,
-        timeOfDay: schedule.timeOfDay,
-        unitsPerDose: schedule.unitsPerDose,
-        medication: schedule.medication,
-        status: slotStatus(scheduledFor, now, record),
-        record: record ? presentRecord(record) : null,
-      });
+  /**
+   * Conteo por estado de cada día de `from` a `to` (inclusive), para pintar el calendario.
+   * Usa las mismas reglas que la vista del día.
+   */
+  async days(groupId: string, { from, to }: DaysQuery) {
+    const zone = await this.groupZone(groupId);
+    if (!DateTime.fromISO(from).isValid || !DateTime.fromISO(to).isValid) {
+      throw new BadRequestException('Fecha inválida');
+    }
+    if (from > to) throw new BadRequestException('from no puede ser posterior a to');
+    const span = daysBetween(from, to) + 1;
+    if (span > MAX_CALENDAR_DAYS) {
+      throw new BadRequestException(`El rango máximo es de ${MAX_CALENDAR_DAYS} días`);
+    }
+    const now = new Date();
+
+    const [schedules, records] = await Promise.all([
+      this.activeSchedules(groupId),
+      this.prisma.doseRecord.findMany({
+        where: {
+          groupId,
+          scheduledFor: { gte: dayBounds(from, zone).start, lt: dayBounds(to, zone).end },
+          ...ACTIVE,
+        },
+        include: dayRecordInclude,
+      }),
+    ]);
+
+    const recordsByDate = new Map<string, DayRecord[]>();
+    for (const record of records) {
+      const isoDate = DateTime.fromJSDate(record.scheduledFor, { zone }).toISODate()!;
+      recordsByDate.set(isoDate, [...(recordsByDate.get(isoDate) ?? []), record]);
     }
 
-    // Registros cuyo horario cambió o se desactivó: se siguen mostrando.
-    for (const [key, record] of recordsByKey) {
-      doses.push({
-        key,
-        scheduleId: record.scheduleId,
-        scheduledFor: record.scheduledFor,
-        timeOfDay: formatTimeInZone(record.scheduledFor, zone),
-        unitsPerDose: record.schedule.unitsPerDose,
-        medication: record.medication,
-        status: record.status,
-        record: presentRecord(record),
-      });
-    }
-
-    doses.sort(
-      (a, b) =>
-        a.scheduledFor.getTime() - b.scheduledFor.getTime() ||
-        a.medication.name.localeCompare(b.medication.name),
-    );
-
-    const summary = { total: doses.length, GIVEN: 0, SKIPPED: 0, OVERDUE: 0, DUE: 0, UPCOMING: 0 };
-    for (const dose of doses) summary[dose.status]++;
-
-    return { date: isoDate, timezone: zone, now, summary, doses };
+    const days = Array.from({ length: span }, (_, i) => {
+      const isoDate = DateTime.fromISO(from, { zone: 'utc' }).plus({ days: i }).toISODate()!;
+      const doses = buildDaySlots(isoDate, zone, now, schedules, recordsByDate.get(isoDate) ?? []);
+      return { date: isoDate, ...countByStatus(doses) };
+    });
+    return { from, to, timezone: zone, today: todayInZone(zone, now), days };
   }
 
   /** Resumen del día en texto plano para compartir (WhatsApp). Los avisos solo van si es hoy. */
@@ -306,6 +300,13 @@ export class DosesService {
     });
   }
 
+  private activeSchedules(groupId: string) {
+    return this.prisma.schedule.findMany({
+      where: { active: true, medication: { groupId, active: true } },
+      include: { medication: { select: medicationSelect } },
+    });
+  }
+
   private async groupZone(groupId: string) {
     const group = await this.prisma.careGroup.findUniqueOrThrow({
       where: { id: groupId },
@@ -324,6 +325,73 @@ interface DaySlot {
   medication: Prisma.MedicationGetPayload<{ select: typeof medicationSelect }>;
   status: DoseSlotStatus;
   record: ReturnType<typeof presentRecord> | null;
+}
+
+const dayRecordInclude = {
+  ...recordInclude,
+  medication: { select: medicationSelect },
+  schedule: { select: { timeOfDay: true, unitsPerDose: true } },
+} satisfies Prisma.DoseRecordInclude;
+
+type DayRecord = Prisma.DoseRecordGetPayload<{ include: typeof dayRecordInclude }>;
+type ScheduleWithMedication = Prisma.ScheduleGetPayload<{
+  include: { medication: { select: typeof medicationSelect } };
+}>;
+
+/** Tomas del día local `isoDate`: horarios que corresponden, cruzados con los registros de ese día. */
+function buildDaySlots(
+  isoDate: string,
+  zone: string,
+  now: Date,
+  schedules: ScheduleWithMedication[],
+  records: DayRecord[],
+): DaySlot[] {
+  const recordsByKey = new Map(records.map((r) => [slotKey(r.scheduleId, r.scheduledFor), r]));
+  const doses: DaySlot[] = [];
+
+  for (const schedule of schedules) {
+    if (!occursOn(schedule, isoDate)) continue;
+    const scheduledFor = occurrenceInstant(schedule.timeOfDay, isoDate, zone);
+    const key = slotKey(schedule.id, scheduledFor);
+    const record = recordsByKey.get(key);
+    recordsByKey.delete(key);
+    doses.push({
+      key,
+      scheduleId: schedule.id,
+      scheduledFor,
+      timeOfDay: schedule.timeOfDay,
+      unitsPerDose: schedule.unitsPerDose,
+      medication: schedule.medication,
+      status: slotStatus(scheduledFor, now, record),
+      record: record ? presentRecord(record) : null,
+    });
+  }
+
+  // Registros cuyo horario cambió o se desactivó: se siguen mostrando.
+  for (const [key, record] of recordsByKey) {
+    doses.push({
+      key,
+      scheduleId: record.scheduleId,
+      scheduledFor: record.scheduledFor,
+      timeOfDay: formatTimeInZone(record.scheduledFor, zone),
+      unitsPerDose: record.schedule.unitsPerDose,
+      medication: record.medication,
+      status: record.status,
+      record: presentRecord(record),
+    });
+  }
+
+  return doses.sort(
+    (a, b) =>
+      a.scheduledFor.getTime() - b.scheduledFor.getTime() ||
+      a.medication.name.localeCompare(b.medication.name),
+  );
+}
+
+function countByStatus(doses: DaySlot[]) {
+  const summary = { total: doses.length, GIVEN: 0, SKIPPED: 0, OVERDUE: 0, DUE: 0, UPCOMING: 0 };
+  for (const dose of doses) summary[dose.status]++;
+  return summary;
 }
 
 function slotKey(scheduleId: string, scheduledFor: Date) {

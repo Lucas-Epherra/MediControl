@@ -6,9 +6,9 @@ import { InfoIcon, SpinnerIcon } from '@/components/icons';
 import { Button, Modal, StatusBadge } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { formatTime } from '@/lib/dates';
-import { useRecordDose } from '@/lib/queries';
+import { useRecordDose, useUndoDose } from '@/lib/queries';
 import type { DaySlot, DoseRecord } from '@/lib/types';
-import { doseDetail, medicationTitle } from './format';
+import { doseDetail, medicationTitle, unitsLabel } from './format';
 
 const textareaClass =
   'box-border w-full rounded-btn border-2 border-muted px-3.5 py-3 font-sans text-base text-ink focus-visible:border-primary';
@@ -48,7 +48,12 @@ export function GiveDialog({ groupId, slot, onClose, onConflict, onDone }: Recor
     event.preventDefault();
     if (!slot) return;
     record.mutate(
-      { scheduleId: slot.scheduleId, scheduledFor: slot.scheduledFor, status: 'GIVEN', notes: note.trim() || undefined },
+      {
+        scheduleId: slot.scheduleId,
+        scheduledFor: slot.scheduledFor,
+        status: 'GIVEN',
+        notes: note.trim() || undefined,
+      },
       {
         onSuccess: () => {
           onDone(`Registrada: ${medicationTitle(slot.medication)} de las ${slot.timeOfDay}.`);
@@ -99,6 +104,74 @@ export function GiveDialog({ groupId, slot, onClose, onConflict, onDone }: Recor
           Cancelar
         </Button>
       </form>
+    </Modal>
+  );
+}
+
+/**
+ * Confirmación antes de deshacer: revierte el registro y, si estaba dada, devuelve el stock.
+ * La toma queda en el historial como deshecha.
+ */
+export function UndoDialog({
+  groupId,
+  slot,
+  timeZone,
+  onClose,
+  onDone,
+}: {
+  groupId: string;
+  slot: DaySlot | null;
+  timeZone: string;
+  onClose: () => void;
+  onDone: (message: string, tone?: 'ok' | 'error') => void;
+}) {
+  const undo = useUndoDose(groupId);
+  const record = slot?.record;
+
+  function close() {
+    undo.reset();
+    onClose();
+  }
+
+  function confirm() {
+    if (!slot || !record) return;
+    undo.mutate(record.id, {
+      onSuccess: () => {
+        onDone(`Se deshizo: ${medicationTitle(slot.medication)} de las ${slot.timeOfDay}.`);
+        close();
+      },
+    });
+  }
+
+  const given = record?.status === 'GIVEN';
+  return (
+    <Modal
+      open={!!slot && !!record}
+      onOpenChange={(open) => !open && close()}
+      title="¿Deshacer este registro?"
+      description={
+        slot && record
+          ? `${medicationTitle(slot.medication)} de las ${slot.timeOfDay} · ${given ? 'dada' : 'omitida'} por ${record.recordedBy.name} a las ${formatTime(record.recordedAt, timeZone)}`
+          : undefined
+      }
+    >
+      <p className="text-left">
+        La toma vuelve a quedar sin registrar
+        {given && slot ? ` y se devuelve ${unitsLabel(record!.unitsGiven, slot.medication.form)} al stock` : ''}. En el
+        historial queda anotado que se deshizo.
+      </p>
+      {undo.isError && <FormAlert>{undo.error.message}</FormAlert>}
+      <Button
+        onClick={confirm}
+        disabled={undo.isPending}
+        icon={undo.isPending ? <SpinnerIcon size={22} /> : undefined}
+        className="w-full"
+      >
+        {undo.isPending ? 'Deshaciendo…' : 'Sí, deshacer'}
+      </Button>
+      <Button variant="secondary" onClick={close} className="w-full">
+        Cancelar
+      </Button>
     </Modal>
   );
 }
@@ -216,7 +289,12 @@ export function ConflictDialog({
   const existing = conflict?.existing;
   const given = existing?.status !== 'SKIPPED';
   return (
-    <Modal open={!!conflict} onOpenChange={(open) => !open && onClose()} title={conflict?.message ?? ''} showCloseButton={false}>
+    <Modal
+      open={!!conflict}
+      onOpenChange={(open) => !open && onClose()}
+      title={conflict?.message ?? ''}
+      showCloseButton={false}
+    >
       {conflict && (
         <div className="flex w-full flex-col gap-3.5 text-left">
           <span className="flex h-[52px] w-[52px] items-center justify-center self-center rounded-full bg-primary-tint text-primary">

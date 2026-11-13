@@ -5,18 +5,18 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { FormAlert } from '@/components/forms';
 import { DayAlerts } from '@/components/hoy/day-alerts';
+import { MonthCalendar, WeekStrip } from '@/components/hoy/calendar';
 import { DaySummary } from '@/components/hoy/day-summary';
-import { ConflictDialog, GiveDialog, SkipDialog, type Conflict } from '@/components/hoy/dialogs';
+import { ConflictDialog, GiveDialog, SkipDialog, UndoDialog, type Conflict } from '@/components/hoy/dialogs';
 import { StockDialog } from '@/components/plan/stock-dialog';
 import { DoseList } from '@/components/hoy/dose-list';
 import { ShareSummary } from '@/components/hoy/share-summary';
-import { medicationTitle } from '@/components/hoy/format';
 import { ChevronLeftIcon, ChevronRightIcon, SpinnerIcon } from '@/components/icons';
 import { Toast, type ToastMessage } from '@/components/toast';
 import { Button } from '@/components/ui';
 import { addDays, capitalize, formatLongDate, formatTime, isoDateInZone } from '@/lib/dates';
 import { useGroup } from '@/lib/group-context';
-import { useAlerts, useDay, useUndoDose } from '@/lib/queries';
+import { useAlerts, useDay } from '@/lib/queries';
 import { can } from '@/lib/roles';
 import { useSession } from '@/lib/session';
 import type { DaySlot } from '@/lib/types';
@@ -55,10 +55,10 @@ function Hoy() {
 
   const day = useDay(group.id, date);
   const alerts = useAlerts(group.id);
-  const undo = useUndoDose(group.id);
 
   const [giving, setGiving] = useState<DaySlot | null>(null);
   const [skipping, setSkipping] = useState<DaySlot | null>(null);
+  const [undoing, setUndoing] = useState<DaySlot | null>(null);
   const [conflict, setConflict] = useState<Conflict | null>(null);
   const [restocking, setRestocking] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -70,14 +70,6 @@ function Hoy() {
 
   function goTo(iso: string) {
     router.replace(iso === today ? pathname : `${pathname}?fecha=${iso}`, { scroll: false });
-  }
-
-  function undoDose(slot: DaySlot) {
-    if (!slot.record) return;
-    undo.mutate(slot.record.id, {
-      onSuccess: () => notify(`Se deshizo: ${medicationTitle(slot.medication)} de las ${slot.timeOfDay}.`),
-      onError: (error) => notify(error.message, 'error'),
-    });
   }
 
   const relative = shown === today ? 'Hoy' : shown === addDays(today, -1) ? 'Ayer' : shown === addDays(today, 1) ? 'Mañana' : null;
@@ -100,11 +92,12 @@ function Hoy() {
           </p>
         </div>
         <nav aria-label="Cambiar de día" className="flex items-center gap-2">
+          {/* En celular se cambia de día con la tira semanal; en escritorio quedan las flechas. */}
           <button
             type="button"
             onClick={() => goTo(addDays(shown, -1))}
             aria-label="Día anterior"
-            className="flex h-12 w-12 items-center justify-center rounded-btn border-[1.5px] border-line bg-white text-ink hover:border-muted"
+            className="hidden h-12 w-12 items-center justify-center rounded-btn border-[1.5px] border-line bg-white text-ink hover:border-muted lg:flex"
           >
             <ChevronLeftIcon size={24} />
           </button>
@@ -117,18 +110,19 @@ function Hoy() {
             type="button"
             onClick={() => goTo(addDays(shown, 1))}
             aria-label="Día siguiente"
-            className="flex h-12 w-12 items-center justify-center rounded-btn border-[1.5px] border-line bg-white text-ink hover:border-muted"
+            className="hidden h-12 w-12 items-center justify-center rounded-btn border-[1.5px] border-line bg-white text-ink hover:border-muted lg:flex"
           >
             <ChevronRightIcon size={24} />
           </button>
         </nav>
       </div>
 
+      <div className="lg:hidden">
+        <WeekStrip groupId={group.id} shown={shown} today={today} onSelect={goTo} />
+      </div>
+
       <div className="flex flex-wrap items-start gap-6 lg:gap-7">
-        <section aria-labelledby="tomas-h" className="order-2 flex min-w-0 flex-[999_1_520px] flex-col gap-2.5 lg:order-1">
-          <h2 id="tomas-h" className="text-h2 font-bold">
-            {shown === today ? 'Tomas de hoy' : 'Tomas del día'}
-          </h2>
+        <section aria-label="Tomas del día" className="flex min-w-0 flex-[999_1_520px] flex-col gap-5">
           {day.isPending ? (
             <DoseSkeleton />
           ) : day.isError ? (
@@ -141,25 +135,30 @@ function Hoy() {
           ) : day.data.doses.length === 0 ? (
             <EmptyDay groupId={group.id} canEditPlan={can(group.myRole, 'editPlan')} />
           ) : (
-            <DoseList
-              group={group}
-              userId={user?.id ?? ''}
-              doses={day.data.doses}
-              now={now}
-              onGive={setGiving}
-              onSkip={setSkipping}
-              onUndo={undoDose}
-            />
+            <>
+              <DaySummary day={day.data} />
+              <DoseList
+                group={group}
+                userId={user?.id ?? ''}
+                doses={day.data.doses}
+                now={now}
+                when={shown < today ? 'past' : shown > today ? 'future' : 'today'}
+                onGive={setGiving}
+                onSkip={setSkipping}
+                onUndo={setUndoing}
+              />
+            </>
           )}
         </section>
 
-        <aside className="order-1 flex min-w-0 flex-[1_1_340px] flex-col gap-6 lg:order-2">
-          {day.data && (
-            <div className="flex flex-col gap-3">
-              <DaySummary day={day.data} isToday={shown === today} />
-              <ShareSummary groupId={group.id} date={date} notify={notify} />
-            </div>
-          )}
+        <aside className="flex min-w-0 flex-[1_1_340px] flex-col gap-6">
+          <section
+            aria-label="Calendario"
+            className="hidden rounded-card border border-line bg-white p-4 lg:block"
+          >
+            <MonthCalendar groupId={group.id} shown={shown} today={today} onSelect={goTo} />
+          </section>
+          {day.data && <ShareSummary groupId={group.id} date={date} notify={notify} />}
           <DayAlerts
             group={group}
             alerts={alerts.data?.alerts}
@@ -181,6 +180,13 @@ function Hoy() {
         slot={skipping}
         onClose={() => setSkipping(null)}
         onConflict={setConflict}
+        onDone={notify}
+      />
+      <UndoDialog
+        groupId={group.id}
+        slot={undoing}
+        timeZone={group.timezone}
+        onClose={() => setUndoing(null)}
         onDone={notify}
       />
       <ConflictDialog conflict={conflict} timeZone={group.timezone} onClose={() => setConflict(null)} />
