@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useId, useState, type FormEvent } from 'react';
+import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import { FormAlert } from '@/components/forms';
 import { FullScreenLoader } from '@/components/full-screen-loader';
-import { GroupNotes } from '@/components/group-notes';
+import { PatientAlerts } from '@/components/patient-info';
 import { ChevronRightIcon, PlusIcon, SpinnerIcon } from '@/components/icons';
 import { Button, Field } from '@/components/ui';
 import { Logo } from '@/components/logo';
@@ -89,7 +89,7 @@ function GroupPicker() {
                       <RoleChip role={group.myRole} />
                     </span>
                     <span className="mt-1.5 hidden lg:flex">
-                      <GroupNotes notes={group.notes} />
+                      <PatientAlerts group={group} />
                     </span>
                   </span>
                   <span className="flex flex-none items-center gap-1.5 font-bold text-primary lg:mt-auto lg:pt-4">
@@ -132,10 +132,9 @@ function GroupPicker() {
 
 function CreateGroupForm({ onCancel, onCreated }: { onCancel?: () => void; onCreated: (id: string) => void }) {
   const create = useCreateGroup();
-  const notesId = useId();
   const [name, setName] = useState('');
   const [patientName, setPatientName] = useState('');
-  const [notes, setNotes] = useState('');
+  const [allergies, setAllergies] = useState('');
   const [errors, setErrors] = useState<{ name?: string; patientName?: string }>({});
 
   function submit(event: FormEvent) {
@@ -147,7 +146,7 @@ function CreateGroupForm({ onCancel, onCreated }: { onCancel?: () => void; onCre
     setErrors(found);
     if (found.name || found.patientName) return;
     create.mutate(
-      { name: name.trim(), patientName: patientName.trim(), notes: notes.trim() || undefined },
+      { name: name.trim(), patientName: patientName.trim(), patientAllergies: allergies.trim() || undefined },
       { onSuccess: (group) => onCreated(group.id) },
     );
   }
@@ -178,23 +177,13 @@ function CreateGroupForm({ onCancel, onCreated }: { onCancel?: () => void; onCre
           maxLength={80}
           error={errors.patientName}
         />
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor={notesId} className="font-bold">
-            Notas importantes <span className="font-normal text-muted">(opcional)</span>
-          </label>
-          <textarea
-            id={notesId}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            maxLength={2000}
-            rows={3}
-            aria-describedby={`${notesId}-hint`}
-            className="min-w-0 rounded-btn border-2 border-muted bg-white px-3.5 py-3 text-base text-ink focus-visible:border-primary"
-          />
-          <span id={`${notesId}-hint`} className="text-sm text-muted">
-            Alergias o indicaciones generales. Las ve todo el grupo arriba de las tomas del día.
-          </span>
-        </div>
+        <Field
+          label="Alergias"
+          value={allergies}
+          onChange={(e) => setAllergies(e.target.value)}
+          maxLength={500}
+          hint="Opcional. Se ven siempre arriba de las tomas del día. El médico y otros datos se completan después en Miembros."
+        />
         {create.isError && <FormAlert>{create.error.message}</FormAlert>}
         <div className="flex flex-wrap gap-2.5">
           <Button

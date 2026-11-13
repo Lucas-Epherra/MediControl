@@ -97,7 +97,7 @@ export function useGroupQuery(groupId: string) {
 export interface CreateGroupInput {
   name: string;
   patientName: string;
-  notes?: string;
+  patientAllergies?: string;
 }
 
 export function useCreateGroup() {

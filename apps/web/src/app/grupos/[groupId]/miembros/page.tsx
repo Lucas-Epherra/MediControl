@@ -3,9 +3,10 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
-import { GroupSettings } from '@/components/miembros/group-settings';
+import { DoctorCard } from '@/components/miembros/doctor-card';
 import { InvitePanel } from '@/components/miembros/invite-panel';
 import { MemberList } from '@/components/miembros/member-list';
+import { PatientCard } from '@/components/miembros/patient-card';
 import { PendingInvitations } from '@/components/miembros/pending-invitations';
 import { NoAccess } from '@/components/section-placeholder';
 import { Toast, type ToastMessage } from '@/components/toast';
@@ -37,7 +38,7 @@ export default function MiembrosPage() {
     <div className="mx-auto flex max-w-[1200px] flex-col gap-6 px-4 pb-8 pt-5 lg:gap-7 lg:px-10 lg:pt-10">
       <div>
         <h1 className="text-h1 font-bold lg:text-display">Miembros</h1>
-        <p className="mt-1 text-muted">Quiénes forman parte del grupo, con qué rol, y cómo sumar a alguien más.</p>
+        <p className="mt-1 text-muted">Quiénes forman parte del grupo, cómo sumar a alguien más, y los datos de la persona cuidada y su médico.</p>
       </div>
 
       <div className="flex flex-wrap items-start gap-6 lg:gap-7">
@@ -50,10 +51,21 @@ export default function MiembrosPage() {
             onLeft={left}
           />
           <PendingInvitations groupId={group.id} timeZone={group.timezone} onNotify={notify} />
+          {/* Debajo de la lista, para no dejar el hueco junto al panel de invitar. La key remonta el
+              formulario con lo guardado. */}
+          <PatientCard
+            key={[group.patientName, group.patientBirthDate, group.patientAllergies, group.patientConditions, group.notes, group.name].join('|')}
+            group={group}
+            onNotify={notify}
+          />
         </div>
         <aside className="flex min-w-0 flex-[1_1_340px] flex-col gap-6">
           <InvitePanel groupId={group.id} />
-          <GroupSettings key={`${group.name}|${group.patientName}|${group.notes}`} group={group} onNotify={notify} />
+          <DoctorCard
+            key={[group.doctorName, group.doctorSpecialty, group.doctorPhone, group.doctorEmail].join('|')}
+            group={group}
+            onNotify={notify}
+          />
         </aside>
       </div>
 

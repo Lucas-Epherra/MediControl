@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState, type InputHTMLAttributes, type ReactNode } from 'react';
+import { useId, useState, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from 'react';
 import { InfoIcon } from './icons';
 
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,6 +51,35 @@ export function PasswordField({ label, hint, error, ...input }: PasswordFieldPro
           {hint}
         </span>
       ) : null}
+    </div>
+  );
+}
+
+interface TextAreaFieldProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'id'> {
+  label: ReactNode;
+  hint?: string;
+}
+
+/** Igual que `Field`, para textos de varias líneas. */
+export function TextAreaField({ label, hint, rows = 3, ...textarea }: TextAreaFieldProps) {
+  const id = useId();
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="font-bold">
+        {label}
+      </label>
+      <textarea
+        id={id}
+        rows={rows}
+        aria-describedby={hint ? `${id}-hint` : undefined}
+        className="box-border w-full min-w-0 rounded-btn border-2 border-muted bg-white px-3.5 py-3 font-sans text-base text-ink focus-visible:border-primary"
+        {...textarea}
+      />
+      {hint && (
+        <span id={`${id}-hint`} className="text-sm text-muted">
+          {hint}
+        </span>
+      )}
     </div>
   );
 }

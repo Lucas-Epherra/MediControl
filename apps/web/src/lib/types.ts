@@ -47,10 +47,35 @@ export interface Group {
   id: string;
   name: string;
   patientName: string;
+  /** YYYY-MM-DD. */
+  patientBirthDate: string | null;
+  patientAllergies: string | null;
+  patientConditions: string | null;
   notes: string | null;
+  doctorName: string | null;
+  doctorSpecialty: string | null;
+  doctorPhone: string | null;
+  doctorEmail: string | null;
   timezone: string;
   myRole: GroupRole;
 }
+
+/** Campos editables de `UpdateGroupDto`; `null` borra el dato. */
+export type GroupUpdate = Partial<
+  Pick<
+    Group,
+    | 'name'
+    | 'patientName'
+    | 'patientBirthDate'
+    | 'patientAllergies'
+    | 'patientConditions'
+    | 'notes'
+    | 'doctorName'
+    | 'doctorSpecialty'
+    | 'doctorPhone'
+    | 'doctorEmail'
+  >
+>;
 
 /** `medicationSelect` de apps/api/src/doses/doses.service.ts. */
 export interface MedicationSummary {
