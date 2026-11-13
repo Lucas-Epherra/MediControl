@@ -86,7 +86,7 @@ function Invitation({ token }: { token: string }) {
           <dd className="text-card font-bold">{invitation.group.name}</dd>
         </div>
         <div>
-          <dt className="text-sm text-muted">Persona cuidada</dt>
+          <dt className="text-sm text-muted">Paciente</dt>
           <dd className="font-bold">{invitation.group.patientName}</dd>
         </div>
         <div>

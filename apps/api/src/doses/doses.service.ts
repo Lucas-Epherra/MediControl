@@ -44,6 +44,12 @@ const medicationSelect = {
   instructions: true,
 } satisfies Prisma.MedicationSelect;
 
+/** En la vista del día cada tarjeta muestra también el stock que queda. */
+const dayMedicationSelect = {
+  ...medicationSelect,
+  stock: true,
+} satisfies Prisma.MedicationSelect;
+
 @Injectable()
 export class DosesService {
   constructor(
@@ -59,15 +65,21 @@ export class DosesService {
     const { start, end } = dayBounds(isoDate, zone);
     const now = new Date();
 
-    const [schedules, records] = await Promise.all([
+    const [schedules, records, alerts] = await Promise.all([
       this.activeSchedules(groupId),
       this.prisma.doseRecord.findMany({
         where: { groupId, scheduledFor: { gte: start, lt: end }, ...ACTIVE },
         include: dayRecordInclude,
       }),
+      this.alerts.list(groupId),
     ]);
 
-    const doses = buildDaySlots(isoDate, zone, now, schedules, records);
+    // Stock bajo con el mismo criterio que el aviso, para marcarlo en cada tarjeta.
+    const lowStock = new Set(alerts.alerts.filter((a) => a.type === 'LOW_STOCK').map((a) => a.medicationId));
+    const doses = buildDaySlots(isoDate, zone, now, schedules, records).map((dose) => ({
+      ...dose,
+      medication: { ...dose.medication, lowStock: lowStock.has(dose.medication.id) },
+    }));
     return { date: isoDate, timezone: zone, now, summary: countByStatus(doses), doses };
   }
 
@@ -303,7 +315,7 @@ export class DosesService {
   private activeSchedules(groupId: string) {
     return this.prisma.schedule.findMany({
       where: { active: true, medication: { groupId, active: true } },
-      include: { medication: { select: medicationSelect } },
+      include: { medication: { select: dayMedicationSelect } },
     });
   }
 
@@ -322,20 +334,20 @@ interface DaySlot {
   scheduledFor: Date;
   timeOfDay: string;
   unitsPerDose: number;
-  medication: Prisma.MedicationGetPayload<{ select: typeof medicationSelect }>;
+  medication: Prisma.MedicationGetPayload<{ select: typeof dayMedicationSelect }>;
   status: DoseSlotStatus;
   record: ReturnType<typeof presentRecord> | null;
 }
 
 const dayRecordInclude = {
   ...recordInclude,
-  medication: { select: medicationSelect },
+  medication: { select: dayMedicationSelect },
   schedule: { select: { timeOfDay: true, unitsPerDose: true } },
 } satisfies Prisma.DoseRecordInclude;
 
 type DayRecord = Prisma.DoseRecordGetPayload<{ include: typeof dayRecordInclude }>;
 type ScheduleWithMedication = Prisma.ScheduleGetPayload<{
-  include: { medication: { select: typeof medicationSelect } };
+  include: { medication: { select: typeof dayMedicationSelect } };
 }>;
 
 /** Tomas del día local `isoDate`: horarios que corresponden, cruzados con los registros de ese día. */
