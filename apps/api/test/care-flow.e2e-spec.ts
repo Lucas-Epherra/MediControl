@@ -90,6 +90,35 @@ describe('Flujo de cuidado (e2e)', () => {
     await api.get(`/api/groups/${randomUUID()}/day`).set(as('admin')).expect(404);
   });
 
+  it('guarda los datos de la persona cuidada y del médico; solo el ADMIN los edita', async () => {
+    const data = {
+      patientBirthDate: '1946-05-21',
+      patientAllergies: 'Penicilina',
+      doctorName: 'Dra. Pérez',
+      doctorPhone: '+54 2983 41-2233',
+      doctorEmail: 'Perez@Example.com',
+    };
+    await api.patch(`/api/groups/${groupId}`).set(as('caregiver')).send(data).expect(403);
+    await api
+      .patch(`/api/groups/${groupId}`)
+      .set(as('admin'))
+      .send({ patientBirthDate: '21/05/1946' })
+      .expect(400);
+    await api.patch(`/api/groups/${groupId}`).set(as('admin')).send({ doctorPhone: 'llamar' }).expect(400);
+
+    await api.patch(`/api/groups/${groupId}`).set(as('admin')).send(data).expect(200);
+    const seen = await api.get(`/api/groups/${groupId}`).set(as('caregiver')).expect(200);
+    expect(seen.body).toMatchObject({ ...data, doctorEmail: 'perez@example.com', myRole: 'CAREGIVER' });
+
+    // null borra el dato.
+    const cleared = await api
+      .patch(`/api/groups/${groupId}`)
+      .set(as('admin'))
+      .send({ patientBirthDate: null, doctorEmail: null })
+      .expect(200);
+    expect(cleared.body).toMatchObject({ patientBirthDate: null, doctorEmail: null, doctorName: 'Dra. Pérez' });
+  });
+
   it('solo el ADMIN edita el plan de medicación', async () => {
     // Toma programada hace 10 minutos, para que esté "para dar".
     const slot = DateTime.now().setZone(ZONE).minus({ minutes: 10 }).startOf('minute');
