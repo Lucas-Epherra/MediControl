@@ -80,7 +80,7 @@ export function DoseCard({
       {note && <div className="mt-2 text-sm text-muted">{note}</div>}
 
       {actions && actions.length > 0 && (
-        <div className="mt-3.5 flex gap-2.5">
+        <div className="mt-3.5 flex flex-wrap gap-2.5">
           {actions.map((action) => (
             <Button
               key={action.label}
@@ -88,8 +88,13 @@ export function DoseCard({
               icon={action.icon}
               onClick={action.onClick}
               // Como en la hoja: la acción principal ocupa más; Deshacer queda a su tamaño.
+              // Si no entran en una fila (celular angosto), la principal queda arriba a todo el ancho.
               className={
-                action.variant === "primary" ? "flex-[2]" : action.variant === "neutral" ? "" : "flex-1"
+                action.variant === "primary"
+                  ? "flex-[2_1_14rem]"
+                  : action.variant === "neutral"
+                    ? ""
+                    : "flex-[1_1_8rem]"
               }
             >
               {action.label}

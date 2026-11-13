@@ -58,6 +58,43 @@ export function formatDayHeading(isoDate: string, today: string): string {
   return long.charAt(0).toUpperCase() + long.slice(1);
 }
 
+/** Lunes de la semana de `isoDate` (en Argentina la semana arranca el lunes). */
+export function startOfWeek(isoDate: string): string {
+  const weekday = calendarDate(isoDate).getUTCDay(); // 0 = domingo
+  return addDays(isoDate, -((weekday + 6) % 7));
+}
+
+/** Primer día del mes de `isoDate`. */
+export function startOfMonth(isoDate: string): string {
+  return `${isoDate.slice(0, 8)}01`;
+}
+
+/** Primer día del mes siguiente (`months` = 1) o anterior (-1). */
+export function addMonths(isoMonthStart: string, months: number): string {
+  const date = new Date(`${isoMonthStart.slice(0, 8)}01T00:00:00Z`);
+  date.setUTCMonth(date.getUTCMonth() + months);
+  return date.toISOString().slice(0, 10);
+}
+
+/** Último día del mes de `isoDate`. */
+export function endOfMonth(isoDate: string): string {
+  return addDays(addMonths(startOfMonth(isoDate), 1), -1);
+}
+
+/** 'noviembre de 2026' */
+export function formatMonth(isoDate: string): string {
+  return new Intl.DateTimeFormat('es-AR', { timeZone: 'UTC', month: 'long', year: 'numeric' }).format(
+    calendarDate(isoDate),
+  );
+}
+
+/** 'lun', 'mar'… */
+export function formatWeekdayShort(isoDate: string): string {
+  return new Intl.DateTimeFormat('es-AR', { timeZone: 'UTC', weekday: 'short' })
+    .format(calendarDate(isoDate))
+    .replace('.', '');
+}
+
 /** '12/11' */
 export function formatShortDate(isoDate: string): string {
   return new Intl.DateTimeFormat('es-AR', { timeZone: 'UTC', day: '2-digit', month: '2-digit' }).format(

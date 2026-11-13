@@ -1,8 +1,8 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './api';
-import type { Alert, DayResponse, DoseRecord, Group } from './types';
+import type { Alert, CalendarResponse, DayResponse, DoseRecord, Group } from './types';
 
 export const queryKeys = {
   groups: ['groups'] as const,
@@ -20,6 +20,20 @@ export function useDay(groupId: string, date?: string) {
     queryKey: queryKeys.day(groupId, date),
     queryFn: () => api<DayResponse>(`/groups/${groupId}/day${date ? `?date=${date}` : ''}`),
     ...LIVE,
+  });
+}
+
+/**
+ * Conteo por estado de cada día del rango (GET /days), para los puntos del calendario.
+ * Cuelga de la clave de los días, así que se refresca al registrar o deshacer una toma.
+ */
+export function useCalendar(groupId: string, from: string, to: string) {
+  return useQuery({
+    queryKey: [...queryKeys.days(groupId), 'calendar', from, to] as const,
+    queryFn: () => api<CalendarResponse>(`/groups/${groupId}/days?from=${from}&to=${to}`),
+    placeholderData: keepPreviousData,
+    refetchOnWindowFocus: true,
+    staleTime: 30_000,
   });
 }
 

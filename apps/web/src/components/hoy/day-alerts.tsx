@@ -46,7 +46,7 @@ export function DayAlerts({ group, alerts, failed, onRestock }: DayAlertsProps) 
             stock && alert.medicationId && can(group.myRole, 'adjustStock')
               ? { label: 'Reponer', onClick: () => onRestock(alert.medicationId!) }
               : !stock && can(group.myRole, 'viewPlan')
-                ? { label: 'Ver recetas', onClick: () => router.push(`/grupos/${group.id}/plan`) }
+                ? { label: 'Ver recetas', onClick: () => router.push(`/grupos/${group.id}/plan/recetas`) }
                 : undefined;
           return (
             <li key={`${alert.type}-${alert.medicationId ?? ''}-${alert.prescriptionId ?? ''}`}>

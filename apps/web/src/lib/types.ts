@@ -34,6 +34,17 @@ export interface DayResponse {
   doses: DaySlot[];
 }
 
+/** Un día de GET /groups/:groupId/days: conteo por estado, para el calendario. */
+export type CalendarDay = Record<DoseSlotStatus, number> & { date: string; total: number };
+
+export interface CalendarResponse {
+  from: string;
+  to: string;
+  timezone: string;
+  today: string;
+  days: CalendarDay[];
+}
+
 export interface Alert {
   type: 'LOW_STOCK' | 'PRESCRIPTION_EXPIRING' | 'PRESCRIPTION_EXPIRED';
   severity: 'warning' | 'critical';
