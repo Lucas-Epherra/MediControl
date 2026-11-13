@@ -56,7 +56,7 @@ export function ShareSummary({
       >
         Compartir resumen
       </Button>
-      {/* Para todos los roles: el VIEWER no entra al Plan, pero puede imprimirlo. */}
+      {/* Para todos los roles: imprimir no necesita entrar al Plan. */}
       <Link
         href={`/grupos/${groupId}/plan/imprimir`}
         className="flex min-h-touch items-center justify-center gap-2 rounded-btn border-[1.5px] border-line bg-white px-4 font-bold text-ink no-underline hover:bg-canvas hover:text-ink"

@@ -29,7 +29,7 @@ User ─┬─< Membership >─┬─ CareGroup ─┬─< Medication ─┬─<
 |---|---|---|
 | `User` | email (único), passwordHash, name | bcrypt. |
 | `CareGroup` | name, patientName, patientBirthDate, patientAllergies, patientConditions, notes, doctorName, doctorSpecialty, doctorPhone, doctorEmail, timezone | Un grupo = una persona cuidada. `timezone` IANA, por defecto `America/Argentina/Buenos_Aires`. Un solo médico de cabecera por ahora (si hacen falta más, tabla propia). |
-| `Membership` | userId, groupId, role | `UNIQUE(userId, groupId)`. Roles: `ADMIN`, `CAREGIVER`, `VIEWER`. |
+| `Membership` | userId, groupId, role | `UNIQUE(userId, groupId)`. Roles: `ADMIN`, `CAREGIVER` (`VIEWER` se quitó en #26; la migración pasó esas membresías a `CAREGIVER`). |
 | `Invitation` | groupId, email?, role, tokenHash, expiresAt, acceptedAt, revokedAt | Se guarda solo el hash SHA-256 del token. |
 | `Medication` | name, strength ("10 mg"), form, instructions, stock, lowStockThreshold, active | `stock` en unidades (comprimidos, ml, gotas). Admite medias unidades. |
 | `Schedule` | medicationId, timeOfDay ("08:00"), daysOfWeek[], unitsPerDose, startDate, endDate?, active | `daysOfWeek` vacío = todos los días; 1 = lunes … 7 = domingo. |
@@ -76,14 +76,14 @@ ninguna ocurrencia actual.
 - Los servicios siempre consultan con `where: { id, groupId }` (o a través de la medicación del grupo),
   así un ID de otro grupo nunca se resuelve aunque se conozca.
 
-| Acción | ADMIN | CAREGIVER | VIEWER |
-|---|:-:|:-:|:-:|
-| Ver día, historial, plan, avisos | ✔ | ✔ | ✔ |
-| Registrar / deshacer toma propia | ✔ | ✔ | — |
-| Deshacer toma de otro | ✔ | — | — |
-| Reponer / ajustar stock | ✔ | ✔ | — |
-| Editar plan, recetas, grupo | ✔ | — | — |
-| Invitar, cambiar roles, quitar miembros | ✔ | — | — |
+| Acción | ADMIN | CAREGIVER |
+|---|:-:|:-:|
+| Ver día, historial, plan, avisos | ✔ | ✔ |
+| Registrar / deshacer toma propia | ✔ | ✔ |
+| Deshacer toma de otro | ✔ | — |
+| Reponer / ajustar stock | ✔ | ✔ |
+| Editar plan, recetas, grupo | ✔ | — |
+| Invitar, cambiar roles, quitar miembros | ✔ | — |
 
 Siempre debe quedar al menos un `ADMIN` en el grupo.
 

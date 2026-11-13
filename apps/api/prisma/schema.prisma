@@ -10,7 +10,6 @@ datasource db {
 enum GroupRole {
   ADMIN
   CAREGIVER
-  VIEWER
 }
 
 enum DoseStatus {

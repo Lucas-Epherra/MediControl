@@ -125,6 +125,5 @@ export function useAcceptInvitation(token: string) {
 
 export const ROLE_DESCRIPTION: Record<GroupRole, string> = {
   CAREGIVER: 'Registra tomas y repone stock.',
-  VIEWER: 'Solo mira.',
   ADMIN: 'Puede hacer todo.',
 };

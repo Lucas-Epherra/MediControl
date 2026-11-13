@@ -8,7 +8,7 @@ import { ROLE_DESCRIPTION, useCreateInvitation } from '@/lib/members';
 import { ROLE_LABEL } from '@/lib/roles';
 import type { GroupRole } from '@/lib/types';
 
-const ROLES: GroupRole[] = ['CAREGIVER', 'VIEWER', 'ADMIN'];
+const ROLES: GroupRole[] = ['CAREGIVER', 'ADMIN'];
 
 /** Genera un link de invitación. El link se ve una sola vez: después solo queda como pendiente. */
 export function InvitePanel({ groupId }: { groupId: string }) {

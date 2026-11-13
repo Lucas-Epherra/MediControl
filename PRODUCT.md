@@ -10,7 +10,7 @@ web
 
 - **Cuidadores (familiares y cuidadores contratados)** que se turnan para cuidar a un adulto mayor. Abren MediControl al iniciar o durante su turno para saber qué se administró, qué está atrasado y qué queda pendiente, y para registrar las tomas que dan. Rol `CAREGIVER`.
 - **Administrador del grupo** (por lo general un familiar que organiza el cuidado): crea el grupo, carga el plan de medicación, recetas y stock, e invita a los demás con un rol. Rol `ADMIN`.
-- **Observadores** (familiares que siguen el cuidado a distancia): ven todo, no registran ni editan. Rol `VIEWER`.
+- Los familiares que siguen el cuidado a distancia entran también como cuidadores: en la práctica alguna vez dan una toma, y conviene que quede registrada. (Hubo un rol observador, `VIEWER`; se quitó en #26.)
 
 Entre los cuidadores puede haber personas mayores o con poca práctica digital.
 
@@ -40,7 +40,7 @@ No es un recordatorio personal de pastillas: es un registro **compartido por un 
 
 - Funcionalidad del MVP (F1–F10 en `docs/PLAN.md`): cuentas con email y contraseña, grupo de cuidado, invitaciones y roles, plan de medicación con horarios, vista del día, registro y deshacer de tomas, historial, stock con movimientos, recetas con vencimiento y avisos en panel.
 - Estados de una toma: `GIVEN`, `SKIPPED`, `DUE` (de 30 min antes a 60 min después), `OVERDUE`, `UPCOMING` (`docs/ARQUITECTURA.md` §3.4).
-- Permisos por rol (`docs/ARQUITECTURA.md` §3.3): `VIEWER` no registra ni edita; solo `ADMIN` edita plan, recetas, grupo y miembros; `CAREGIVER` registra tomas y repone stock.
+- Permisos por rol (`docs/ARQUITECTURA.md` §3.3): solo `ADMIN` edita plan, recetas, grupo y miembros; `CAREGIVER` registra tomas y repone stock.
 - Un usuario ajeno a un grupo recibe 404 (no se revela que el grupo existe); conflicto de toma duplicada = 409 con `existing.recordedBy` y `recordedAt`.
 - Medicamentos y horarios se archivan, no se borran. El stock admite medias unidades.
 - Stack: monorepo pnpm; `apps/api` NestJS 11 + Prisma 6 + PostgreSQL (desplegada en Render + Neon); `apps/web` Next.js, todavía no creada, prevista en Vercel. Contrato: Swagger en `/docs`.
@@ -55,7 +55,7 @@ No es un recordatorio personal de pastillas: es un registro **compartido por un 
 
 ## Evidence on Hand
 
-- Datos de demo en `apps/api/prisma/seed.ts`: grupo "Cuidado de Marta", usuarios Lucas (ADMIN), Ana (CAREGIVER) y Sofía (VIEWER), tomas de ayer y hoy generadas relativas a la hora de ejecución.
+- Datos de demo en `apps/api/prisma/seed.ts`: grupo "Cuidado de Marta", usuarios Lucas (ADMIN), Ana (CAREGIVER) y Sofía (CAREGIVER), tomas de ayer y hoy generadas relativas a la hora de ejecución.
 - Guion de demo de 3 minutos en `docs/PLAN.md` §5.
 - No existen testimonios, usuarios reales, métricas ni respaldo clínico: no inventarlos.
 
