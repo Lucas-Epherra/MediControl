@@ -374,4 +374,52 @@ describe('Flujo de cuidado (e2e)', () => {
       .send({ role: 'CAREGIVER' })
       .expect(400);
   });
+
+  it('cada uno edita su cuenta: nombre, email y contraseña', async () => {
+    const caregiver = (await api.get('/api/auth/me').set(as('caregiver'))).body;
+    const taken = (await api.get('/api/auth/me').set(as('admin'))).body.email;
+    const newEmail = `cuidadora-${randomUUID()}@example.com`;
+
+    // El nombre nuevo se ve en el historial sin reescribir registros.
+    await api.patch('/api/auth/me').set(as('caregiver')).send({ name: '  Ana María ' }).expect(200);
+    const history = await api.get(`/api/groups/${groupId}/doses`).set(as('admin')).expect(200);
+    expect(history.body.recorders).toContainEqual({ id: caregiver.id, name: 'Ana María' });
+
+    // Cambiar el email pide la contraseña actual; 400 (no 401) para no cerrar la sesión.
+    await api.patch('/api/auth/me').set(as('caregiver')).send({ email: newEmail }).expect(400);
+    await api
+      .patch('/api/auth/me')
+      .set(as('caregiver'))
+      .send({ email: newEmail, currentPassword: 'otra-cosa' })
+      .expect(400);
+    await api
+      .patch('/api/auth/me')
+      .set(as('caregiver'))
+      .send({ email: taken, currentPassword: 'secreto123' })
+      .expect(409);
+    const updated = await api
+      .patch('/api/auth/me')
+      .set(as('caregiver'))
+      .send({ email: newEmail.toUpperCase(), currentPassword: 'secreto123' })
+      .expect(200);
+    expect(updated.body).toEqual({ id: caregiver.id, email: newEmail, name: 'Ana María' });
+
+    await api
+      .patch('/api/auth/me/password')
+      .set(as('caregiver'))
+      .send({ currentPassword: 'mal', newPassword: 'nueva-clave-1' })
+      .expect(400);
+    await api
+      .patch('/api/auth/me/password')
+      .set(as('caregiver'))
+      .send({ currentPassword: 'secreto123', newPassword: 'corta' })
+      .expect(400);
+    await api
+      .patch('/api/auth/me/password')
+      .set(as('caregiver'))
+      .send({ currentPassword: 'secreto123', newPassword: 'nueva-clave-1' })
+      .expect(204);
+    await api.post('/api/auth/login').send({ email: newEmail, password: 'secreto123' }).expect(401);
+    await api.post('/api/auth/login').send({ email: newEmail, password: 'nueva-clave-1' }).expect(200);
+  });
 });

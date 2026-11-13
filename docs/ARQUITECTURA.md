@@ -126,6 +126,8 @@ Base: `/api`. Documentación interactiva: `/docs` (Swagger).
 | POST | `/auth/register` | Crear cuenta |
 | POST | `/auth/login` | Iniciar sesión |
 | GET | `/auth/me` | Usuario actual |
+| PATCH | `/auth/me` | Uno mismo — `{ name?, email?, currentPassword? }`. Cambiar el email pide `currentPassword`; si no coincide, **400** (no 401, para no cerrar la sesión). Email ya usado: **409** |
+| PATCH | `/auth/me/password` | Uno mismo — `{ currentPassword, newPassword }` (mínimo 8). Responde 204; la sesión sigue activa |
 
 ### Grupos y miembros
 | Método | Ruta | Rol |
