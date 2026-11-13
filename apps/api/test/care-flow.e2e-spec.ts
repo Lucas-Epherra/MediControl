@@ -247,6 +247,10 @@ describe('Flujo de cuidado (e2e)', () => {
     // El plan marca el mismo medicamento con stock bajo.
     const list = await api.get(`/api/groups/${groupId}/medications`).set(as('family')).expect(200);
     expect(list.body.find((m: { id: string }) => m.id === medicationId).lowStock).toBe(true);
+    // Y la vista del día muestra en la tarjeta cuánto queda.
+    const day = await api.get(`/api/groups/${groupId}/day`).set(as('family')).expect(200);
+    const dose = day.body.doses.find((d: { scheduleId: string }) => d.scheduleId === scheduleId);
+    expect(dose.medication).toMatchObject({ stock: 6, lowStock: true });
   });
 
   it('lista medicamentos activos, archivados o todos', async () => {

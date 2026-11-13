@@ -84,7 +84,7 @@ function GroupPicker() {
                 >
                   <span className="flex flex-1 flex-col gap-1">
                     <span className="text-card font-bold lg:text-[26px] lg:leading-[1.2]">{group.name}</span>
-                    <span className="text-muted">Persona cuidada: {group.patientName}</span>
+                    <span className="text-muted">Paciente: {group.patientName}</span>
                     <span className="mt-1.5 flex flex-wrap gap-2">
                       <RoleChip role={group.myRole} />
                     </span>
@@ -141,7 +141,7 @@ function CreateGroupForm({ onCancel, onCreated }: { onCancel?: () => void; onCre
     event.preventDefault();
     const found = {
       name: name.trim() ? undefined : 'Escribí un nombre para el grupo',
-      patientName: patientName.trim() ? undefined : 'Escribí el nombre de la persona que cuidan',
+      patientName: patientName.trim() ? undefined : 'Escribí el nombre del o la paciente',
     };
     setErrors(found);
     if (found.name || found.patientName) return;
@@ -170,7 +170,8 @@ function CreateGroupForm({ onCancel, onCreated }: { onCancel?: () => void; onCre
           error={errors.name}
         />
         <Field
-          label="Persona cuidada"
+          label="Paciente"
+          hint="Nombre y apellido."
           autoComplete="off"
           value={patientName}
           onChange={(e) => setPatientName(e.target.value)}

@@ -267,7 +267,7 @@ function GroupRow({ group, userId, onNotify }: { group: Group; userId: string; o
         <Link href={`/grupos/${group.id}`} className="font-bold">
           {group.name}
         </Link>
-        <span className="text-sm text-muted">Persona cuidada: {group.patientName}</span>
+        <span className="text-sm text-muted">Paciente: {group.patientName}</span>
         <RoleChip role={group.myRole} />
       </div>
       <Button variant="danger" onClick={() => setConfirming(true)} className="self-start sm:self-center">

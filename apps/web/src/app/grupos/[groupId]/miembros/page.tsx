@@ -38,7 +38,7 @@ export default function MiembrosPage() {
     <div className="mx-auto flex max-w-[1200px] flex-col gap-6 px-4 pb-8 pt-5 lg:gap-7 lg:px-10 lg:pt-10">
       <div>
         <h1 className="text-h1 font-bold lg:text-display">Miembros</h1>
-        <p className="mt-1 text-muted">Quiénes forman parte del grupo, cómo sumar a alguien más, y los datos de la persona cuidada y su médico.</p>
+        <p className="mt-1 text-muted">Quiénes forman parte del grupo, cómo sumar a alguien más, y los datos del o la paciente y de su médico.</p>
       </div>
 
       <div className="flex flex-wrap items-start gap-6 lg:gap-7">

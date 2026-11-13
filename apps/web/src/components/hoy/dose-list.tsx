@@ -5,7 +5,15 @@ import { Button, CheckIcon, DoseCard, SkipIcon, type DoseCardAction } from '@/co
 import { formatAgo, formatTime, isoDateInZone } from '@/lib/dates';
 import { can } from '@/lib/roles';
 import type { DaySlot, Group } from '@/lib/types';
-import { canRecordNow, doseDetail, MAX_EARLY_RECORD_MS, medicationTitle, UI_STATUS, UNDO_WINDOW_MS } from './format';
+import {
+  canRecordNow,
+  doseDetail,
+  MAX_EARLY_RECORD_MS,
+  medicationTitle,
+  UI_STATUS,
+  UNDO_WINDOW_MS,
+  unitsLabel,
+} from './format';
 
 /** Desde cuánto atraso se sugiere consultar antes de dar la toma. */
 const LONG_OVERDUE_MS = 4 * 3_600_000;
@@ -77,6 +85,15 @@ export function DoseList({ group, userId, doses, now, when, onGive, onSkip, onUn
     return sameDay ? `Se puede registrar desde las ${formatTime(from, zone)}` : undefined;
   }
 
+  function stockFor({ medication }: DaySlot) {
+    // Una API anterior no manda el stock: no se muestra nada.
+    if (typeof medication.stock !== 'number') return undefined;
+    const left = Math.max(0, medication.stock);
+    if (left === 0) return { text: 'Sin stock', low: true };
+    const text = `${left === 1 ? 'Queda' : 'Quedan'} ${unitsLabel(left, medication.form)}`;
+    return medication.lowStock ? { text: `Stock bajo · ${text.toLowerCase()}`, low: true } : { text, low: false };
+  }
+
   function cards(slots: DaySlot[]) {
     return (
       <ol className="flex flex-col gap-3">
@@ -89,6 +106,7 @@ export function DoseList({ group, userId, doses, now, when, onGive, onSkip, onUn
               status={UI_STATUS[slot.status]}
               lateSince={slot.status === 'OVERDUE' ? formatAgo(new Date(slot.scheduledFor), new Date(now)) : undefined}
               note={noteFor(slot)}
+              stock={stockFor(slot)}
               actions={actionsFor(slot)}
             />
           </li>

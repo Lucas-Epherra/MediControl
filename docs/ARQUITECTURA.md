@@ -167,7 +167,7 @@ fija el conteo real.
 ### Tomas
 | Método | Ruta | Rol |
 |---|---|---|
-| GET | `/groups/:groupId/day?date=YYYY-MM-DD` | Miembro (sin `date` = hoy en la zona del grupo) |
+| GET | `/groups/:groupId/day?date=YYYY-MM-DD` | Miembro (sin `date` = hoy en la zona del grupo). Cada toma trae `medication.stock` y `medication.lowStock` (mismo criterio que el aviso) |
 | GET | `/groups/:groupId/day/summary?date=YYYY-MM-DD` | Miembro — `{ date, text }`: resumen del día en texto plano para compartir por WhatsApp (por estado, con responsable y motivo; si es hoy, también los avisos). Sin emojis |
 | GET | `/groups/:groupId/days?from=YYYY-MM-DD&to=YYYY-MM-DD` | Miembro — calendario: por cada día del rango (inclusive, máximo 62) `{ date, total, GIVEN, SKIPPED, OVERDUE, DUE, UPCOMING }`, con las mismas reglas que la vista del día. También devuelve `today` en la zona del grupo |
 | POST | `/groups/:groupId/doses` | ADMIN, CAREGIVER |

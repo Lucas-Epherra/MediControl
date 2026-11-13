@@ -4,7 +4,7 @@ import { InfoIcon, PhoneIcon } from './icons';
 type PatientFields = Pick<Group, 'patientAllergies' | 'notes'>;
 
 /**
- * Chip de seguridad de la persona cuidada (el «Alérgica a la penicilina» del diseño). Las alergias
+ * Chip de seguridad del o la paciente (el «Alérgica a la penicilina» del diseño). Las alergias
  * se muestran completas, sin recortar; si no hay, quedan las notas del grupo recortadas a dos líneas.
  */
 export function PatientAlerts({ group, compact = false }: { group: PatientFields; compact?: boolean }) {
