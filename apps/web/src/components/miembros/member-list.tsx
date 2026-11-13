@@ -102,11 +102,11 @@ export function MemberList({ groupId, patientName, userId, onNotify, onLeft }: M
               </div>
 
               {lastAdmin ? (
-                <p className="text-sm text-muted md:w-[240px]">
+                <p className="text-sm text-muted md:w-[220px]">
                   Único administrador. Para cambiar su rol, primero nombrá a otra persona como administrador.
                 </p>
               ) : (
-                <div className="md:w-[240px]">
+                <div className="md:w-[220px]">
                   <SelectField
                     label={`Rol de ${member.name}`}
                     value={member.role}
@@ -118,9 +118,10 @@ export function MemberList({ groupId, patientName, userId, onNotify, onLeft }: M
                 </div>
               )}
 
-              <div className="md:flex-none">
+              {/* Ancho fijo: «Salir del grupo» es más largo que «Quitar» y no tiene que correr las columnas. */}
+              <div className="md:flex md:w-[8.5rem] md:flex-none md:justify-end">
                 {!lastAdmin && (
-                  <Button variant="danger" onClick={() => setRemoving(member)}>
+                  <Button variant="danger" onClick={() => setRemoving(member)} className="md:px-0">
                     {isSelf(member) ? 'Salir del grupo' : 'Quitar'}
                   </Button>
                 )}
