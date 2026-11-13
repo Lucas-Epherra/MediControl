@@ -1,4 +1,4 @@
-import { DoseStatus, GroupRole, PrismaClient, StockMovementType } from '@prisma/client';
+import { DoseStatus, GroupRole, Prisma, PrismaClient, StockMovementType } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { DateTime } from 'luxon';
 import { isoToDateOnly } from '../src/common/dates';
@@ -11,6 +11,14 @@ import { occurrenceInstant, occursOn } from '../src/doses/occurrences';
  */
 const prisma = new PrismaClient();
 const ZONE = 'America/Argentina/Buenos_Aires';
+/** Días hacia atrás con tomas registradas (los horarios empiezan hace 30 días). */
+const HISTORY_DAYS = 30;
+/** Tomas omitidas a propósito: dan algo para mostrar en el historial y en el calendario. */
+const SKIPPED = [
+  { daysAgo: 1, medication: 'Metformina', timeOfDay: '21:00', reason: 'No quiso cenar; se consultó con la médica.' },
+  { daysAgo: 6, medication: 'Enalapril', timeOfDay: '20:00', reason: 'Presión baja (9/6). Se avisó a la médica.' },
+  { daysAgo: 17, medication: 'Metformina', timeOfDay: '13:00', reason: 'Almorzó afuera con la familia.' },
+];
 const PASSWORD = 'demo1234';
 
 const USERS = [
@@ -61,7 +69,6 @@ const MEDICATIONS = [
 async function main() {
   const now = DateTime.now().setZone(ZONE);
   const today = now.toISODate()!;
-  const yesterday = now.minus({ days: 1 }).toISODate()!;
   const startDate = isoToDateOnly(now.minus({ days: 30 }).toISODate()!);
 
   const emails = USERS.map((u) => u.email);
@@ -76,7 +83,7 @@ async function main() {
       prisma.user.create({ data: { email: u.email, name: u.name, passwordHash } }),
     ),
   );
-  const [lucas, ana] = users;
+  const [lucas, ana, sofia] = users;
 
   const group = await prisma.careGroup.create({
     data: {
@@ -116,8 +123,11 @@ async function main() {
       include: { schedules: true },
     });
 
+    // Último mes registrado, para que el historial y el calendario tengan días completos y alguna omitida.
+    const records: Prisma.DoseRecordCreateManyInput[] = [];
     for (const schedule of medication.schedules) {
-      for (const day of [yesterday, today]) {
+      for (let back = HISTORY_DAYS; back >= 0; back--) {
+        const day = now.minus({ days: back }).toISODate()!;
         if (!occursOn(schedule, day)) continue;
         const scheduledFor = occurrenceInstant(schedule.timeOfDay, day, ZONE);
         const minutesAgo = now.diff(DateTime.fromJSDate(scheduledFor), 'minutes').minutes;
@@ -125,23 +135,25 @@ async function main() {
         const leaveOverdue = day === today && medication.name === 'Metformina' && schedule.timeOfDay === '13:00';
         if (minutesAgo < OVERDUE_AFTER_MIN + 30 || leaveOverdue) continue;
 
-        const skipped = day === yesterday && medication.name === 'Metformina' && schedule.timeOfDay === '21:00';
-        const recorder = schedule.timeOfDay < '14:00' ? lucas : ana;
-        await prisma.doseRecord.create({
-          data: {
-            groupId: group.id,
-            medicationId: medication.id,
-            scheduleId: schedule.id,
-            scheduledFor,
-            status: skipped ? DoseStatus.SKIPPED : DoseStatus.GIVEN,
-            unitsGiven: skipped ? 0 : schedule.unitsPerDose,
-            notes: skipped ? 'No quiso cenar; se consultó con la médica.' : null,
-            recordedById: recorder.id,
-            recordedAt: DateTime.fromJSDate(scheduledFor).plus({ minutes: 12 }).toJSDate(),
-          },
+        const skip = SKIPPED.find(
+          (s) => s.daysAgo === back && s.medication === medication.name && s.timeOfDay === schedule.timeOfDay,
+        );
+        const weekend = DateTime.fromISO(day).weekday >= 6;
+        const recorder = schedule.timeOfDay < '14:00' ? lucas : weekend ? sofia : ana;
+        records.push({
+          groupId: group.id,
+          medicationId: medication.id,
+          scheduleId: schedule.id,
+          scheduledFor,
+          status: skip ? DoseStatus.SKIPPED : DoseStatus.GIVEN,
+          unitsGiven: skip ? 0 : schedule.unitsPerDose,
+          notes: skip?.reason ?? null,
+          recordedById: recorder.id,
+          recordedAt: DateTime.fromJSDate(scheduledFor).plus({ minutes: 12 }).toJSDate(),
         });
       }
     }
+    await prisma.doseRecord.createMany({ data: records });
   }
 
   const enalapril = await prisma.medication.findFirstOrThrow({

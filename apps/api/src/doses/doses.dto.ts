@@ -37,6 +37,16 @@ export class DayQuery {
   date?: string;
 }
 
+export class DaysQuery {
+  /** YYYY-MM-DD inclusive, en la zona del grupo. */
+  @Matches(ISO_DATE_REGEX, { message: 'from debe tener formato YYYY-MM-DD' })
+  from: string;
+
+  /** YYYY-MM-DD inclusive. Como máximo 62 días en total. */
+  @Matches(ISO_DATE_REGEX, { message: 'to debe tener formato YYYY-MM-DD' })
+  to: string;
+}
+
 export class HistoryQuery {
   /** YYYY-MM-DD inclusive. Por defecto, hace 7 días. */
   @IsOptional()

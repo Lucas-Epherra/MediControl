@@ -159,7 +159,7 @@ Base: `/api`. Documentación interactiva: `/docs` (Swagger).
 | PATCH / DELETE | `/groups/:groupId/medications/:medicationId/schedules/:scheduleId` | ADMIN |
 | POST | `/groups/:groupId/medications/:medicationId/stock` | ADMIN, CAREGIVER |
 | GET | `/groups/:groupId/medications/:medicationId/stock-movements` | Miembro |
-| GET | `/groups/:groupId/plan-sheet` | Miembro — hoja del plan para imprimir, ya armada: `slots` (horarios vigentes o futuros agrupados por hora, con `medication`, `dose`, `instructions`, `days` y `period` en texto) y `prescriptions` (por vencimiento, con `status` y `daysLeft`). Sin medicamentos archivados ni horarios vencidos |
+| GET | `/groups/:groupId/plan-sheet` | Miembro — hoja del plan para imprimir, ya armada: `allergies` de la persona cuidada, `slots` (horarios vigentes o futuros agrupados por hora, con `medication`, `dose`, `instructions`, `days` y `period` en texto) y `prescriptions` (por vencimiento, con `status` y `daysLeft`). Sin medicamentos archivados ni horarios vencidos |
 
 `POST .../stock`: `{ "type": "RESTOCK", "quantity": 30 }` suma; `{ "type": "ADJUSTMENT", "quantity": 12 }`
 fija el conteo real.
@@ -169,6 +169,7 @@ fija el conteo real.
 |---|---|---|
 | GET | `/groups/:groupId/day?date=YYYY-MM-DD` | Miembro (sin `date` = hoy en la zona del grupo) |
 | GET | `/groups/:groupId/day/summary?date=YYYY-MM-DD` | Miembro — `{ date, text }`: resumen del día en texto plano para compartir por WhatsApp (por estado, con responsable y motivo; si es hoy, también los avisos). Sin emojis |
+| GET | `/groups/:groupId/days?from=YYYY-MM-DD&to=YYYY-MM-DD` | Miembro — calendario: por cada día del rango (inclusive, máximo 62) `{ date, total, GIVEN, SKIPPED, OVERDUE, DUE, UPCOMING }`, con las mismas reglas que la vista del día. También devuelve `today` en la zona del grupo |
 | POST | `/groups/:groupId/doses` | ADMIN, CAREGIVER |
 | DELETE | `/groups/:groupId/doses/:doseId` | Quien registró (24 h) o ADMIN — marca la toma como deshecha (no la borra) |
 | GET | `/groups/:groupId/doses?from=&to=&medicationId=&recordedById=&status=&undone=` | Miembro — historial; incluye `recorders` del período. `undone=true` solo deshechas, `false` solo vigentes, sin indicar todas |
