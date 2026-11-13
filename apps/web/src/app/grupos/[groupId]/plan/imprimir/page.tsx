@@ -53,6 +53,11 @@ function Sheet({ sheet }: { sheet: PlanSheet }) {
       <header className="flex flex-col gap-1 border-b-2 border-ink pb-4">
         <p className="text-sm font-bold uppercase tracking-wide text-muted">Plan de medicación</p>
         <h1 className="text-h1 font-bold">{sheet.patientName}</h1>
+        {sheet.allergies && (
+          <p className="my-1 self-start rounded-lg border-2 border-ink px-3 py-1 text-card font-bold">
+            Alergias: {sheet.allergies}
+          </p>
+        )}
         <p className="text-muted">Actualizado el {formatLongDate(sheet.date)} · MediControl</p>
         {sheet.notes && <p className="mt-2 whitespace-pre-line">{sheet.notes}</p>}
       </header>

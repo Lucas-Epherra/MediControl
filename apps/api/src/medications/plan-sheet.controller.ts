@@ -12,7 +12,7 @@ export class PlanSheetService {
   async get(groupId: string) {
     const group = await this.prisma.careGroup.findUniqueOrThrow({
       where: { id: groupId },
-      select: { name: true, patientName: true, notes: true, timezone: true },
+      select: { name: true, patientName: true, patientAllergies: true, notes: true, timezone: true },
     });
     const [medications, prescriptions] = await Promise.all([
       this.prisma.medication.findMany({
