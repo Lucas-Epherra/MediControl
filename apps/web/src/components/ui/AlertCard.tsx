@@ -33,15 +33,18 @@ export function AlertCard({ tone, icon, label, message, action }: AlertCardProps
       >
         {icon}
       </span>
-      <div className="flex-1">
-        <div className="font-bold">{label}</div>
-        <div className="text-muted">{message}</div>
+      {/* El botón baja debajo del texto cuando no entran los dos (columna angosta de escritorio). */}
+      <div className="flex min-w-0 flex-1 flex-wrap items-start gap-x-3.5 gap-y-3">
+        <div className="min-w-[12rem] flex-1">
+          <div className="font-bold">{label}</div>
+          <div className="text-muted">{message}</div>
+        </div>
+        {action && (
+          <Button variant="secondary" onClick={action.onClick} className="flex-none">
+            {action.label}
+          </Button>
+        )}
       </div>
-      {action && (
-        <Button variant="secondary" onClick={action.onClick} className="flex-none">
-          {action.label}
-        </Button>
-      )}
     </div>
   );
 }
