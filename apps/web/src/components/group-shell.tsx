@@ -150,13 +150,18 @@ function Sidebar({
       </nav>
       {user && (
         <div className="mt-auto flex flex-col gap-3 border-t border-line pt-4">
-          <div className="flex items-center gap-2.5">
+          <Link
+            href="/cuenta"
+            aria-label={`${user.name}, ${ROLE_LABEL[group.myRole]}. Mi cuenta`}
+            className="-mx-2 flex items-center gap-2.5 rounded-btn px-2 py-1.5 text-ink no-underline hover:bg-canvas hover:text-ink"
+          >
             <Avatar name={user.name} muted={group.myRole !== 'ADMIN'} />
-            <span className="flex min-w-0 flex-col leading-tight">
+            <span className="flex min-w-0 flex-1 flex-col leading-tight">
               <b className="truncate">{user.name}</b>
-              <span className="text-sm text-muted">{ROLE_LABEL[group.myRole]}</span>
+              <span className="text-sm text-muted">{ROLE_LABEL[group.myRole]} · Mi cuenta</span>
             </span>
-          </div>
+            <ChevronRightIcon size={18} className="flex-none text-muted" />
+          </Link>
           <button
             type="button"
             onClick={() => {

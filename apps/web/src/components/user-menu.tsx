@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useId } from 'react';
 import { useSession } from '@/lib/session';
 import { Avatar } from './avatar';
-import { ChevronDownIcon, LogoutIcon, SwitchIcon } from './icons';
+import { ChevronDownIcon, LogoutIcon, PersonIcon, SwitchIcon } from './icons';
 
 /** Botón con la inicial del usuario que abre un menú nativo (popover: Esc y clic afuera lo cierran). */
 export function UserMenu({ subtitle, showSwitchGroup = false }: { subtitle?: string; showSwitchGroup?: boolean }) {
@@ -48,6 +48,13 @@ export function UserMenu({ subtitle, showSwitchGroup = false }: { subtitle?: str
             Cambiar de grupo
           </Link>
         )}
+        <Link
+          href="/cuenta"
+          className="flex min-h-[52px] items-center gap-2.5 rounded-btn px-3 text-ink no-underline hover:bg-canvas"
+        >
+          <PersonIcon size={22} />
+          Mi cuenta
+        </Link>
         <button
           type="button"
           onClick={signOut}
