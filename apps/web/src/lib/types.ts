@@ -21,7 +21,8 @@ export interface DaySlot {
   scheduledFor: string;
   timeOfDay: string;
   unitsPerDose: number;
-  medication: MedicationSummary;
+  /** Con el stock que queda y si está bajo (mismo criterio que el aviso). */
+  medication: MedicationSummary & { stock: number; lowStock: boolean };
   status: DoseSlotStatus;
   record: DoseRecord | null;
 }

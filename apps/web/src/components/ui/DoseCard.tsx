@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Button, ButtonVariant } from "./Button";
+import { BoxIcon } from "./icons";
 import { DoseStatus, StatusBadge } from "./StatusBadge";
 
 export interface DoseCardAction {
@@ -18,6 +19,8 @@ export interface DoseCardProps {
   registeredBy?: { name: string; time: string; reason?: string; note?: string };
   /** Solo para Atrasada: hace cuánto debía darse. */
   lateSince?: string;
+  /** Detalle chico del stock que queda; `low` lo resalta (stock bajo o sin stock). */
+  stock?: { text: string; low: boolean };
   /** Línea de apoyo bajo las indicaciones, por ejemplo "Se puede registrar desde las 06:00". */
   note?: string;
   /**
@@ -45,6 +48,7 @@ export function DoseCard({
   registeredBy,
   lateSince,
   note,
+  stock,
   actions,
 }: DoseCardProps) {
   return (
@@ -55,6 +59,16 @@ export function DoseCard({
       </div>
       <div className="mt-2.5 text-card font-bold">{medication}</div>
       <div className="text-muted">{instructions}</div>
+      {stock && (
+        <div
+          className={`mt-1.5 flex items-center gap-1.5 text-sm ${
+            stock.low ? "font-bold text-ahora-text" : "text-muted"
+          }`}
+        >
+          <BoxIcon width={16} height={16} className="flex-none" />
+          {stock.text}
+        </div>
+      )}
 
       {status === "atrasada" && lateSince && (
         <div className="mt-1.5 text-sm font-bold text-atrasada">
