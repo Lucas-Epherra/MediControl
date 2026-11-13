@@ -7,7 +7,7 @@ import { can, ROLE_LABEL } from '@/lib/roles';
 import { useSession } from '@/lib/session';
 import type { Group } from '@/lib/types';
 import { Avatar } from './avatar';
-import { GroupNotes } from './group-notes';
+import { DoctorCallLink, PatientAlerts } from './patient-info';
 import { CalendarIcon, ChevronDownIcon, ChevronRightIcon, HistoryIcon, LogoutIcon, PeopleIcon, PillIcon } from './icons';
 import { Logo } from './logo';
 import { UserMenu } from './user-menu';
@@ -60,7 +60,8 @@ export function GroupShell({ group, children }: { group: Group; children: ReactN
         </header>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-white px-4 pt-2.5 pb-3 lg:hidden print:!hidden">
           <span className="font-bold">{group.patientName}</span>
-          <GroupNotes notes={group.notes} />
+          <PatientAlerts group={group} />
+          <DoctorCallLink group={group} />
         </div>
 
         <main id="contenido" tabIndex={-1} className="pb-[110px] outline-none lg:pb-12 print:!pb-0">
@@ -114,7 +115,8 @@ function Sidebar({
       <div className="flex flex-col gap-1.5 rounded-[14px] bg-canvas p-3.5">
         <span className="text-card font-bold">{group.name}</span>
         <span className="text-sm text-muted">Persona cuidada: {group.patientName}</span>
-        <GroupNotes notes={group.notes} compact />
+        <PatientAlerts group={group} compact />
+        <DoctorCallLink group={group} />
         <Link
           href="/grupos?elegir=1"
           className="flex min-h-[44px] items-center gap-1.5 self-start text-sm font-bold no-underline"

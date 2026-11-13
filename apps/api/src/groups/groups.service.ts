@@ -4,7 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { GroupRole, Membership, Prisma } from '@prisma/client';
+import { CareGroup, GroupRole, Membership, Prisma } from '@prisma/client';
+import { dateOnlyToIso, isoToDateOnly } from '../common/dates';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGroupDto, UpdateGroupDto } from './groups.dto';
 
@@ -24,24 +25,24 @@ export class GroupsService {
       include: { group: true },
       orderBy: { createdAt: 'asc' },
     });
-    return memberships.map(({ group, role }) => ({ ...group, myRole: role }));
+    return memberships.map(({ group, role }) => presentGroup(group, role));
   }
 
   async create(userId: string, dto: CreateGroupDto) {
     const group = await this.prisma.careGroup.create({
-      data: { ...dto, memberships: { create: { userId, role: GroupRole.ADMIN } } },
+      data: { ...groupData(dto), memberships: { create: { userId, role: GroupRole.ADMIN } } },
     });
-    return { ...group, myRole: GroupRole.ADMIN };
+    return presentGroup(group, GroupRole.ADMIN);
   }
 
   async get(groupId: string, membership: Membership) {
     const group = await this.prisma.careGroup.findUniqueOrThrow({ where: { id: groupId } });
-    return { ...group, myRole: membership.role };
+    return presentGroup(group, membership.role);
   }
 
   async update(groupId: string, membership: Membership, dto: UpdateGroupDto) {
-    const group = await this.prisma.careGroup.update({ where: { id: groupId }, data: dto });
-    return { ...group, myRole: membership.role };
+    const group = await this.prisma.careGroup.update({ where: { id: groupId }, data: groupData(dto) });
+    return presentGroup(group, membership.role);
   }
 
   async listMembers(groupId: string) {
@@ -98,6 +99,20 @@ export class GroupsService {
       throw new BadRequestException('El grupo debe tener al menos un administrador');
     }
   }
+}
+
+/** La fecha de nacimiento viaja como YYYY-MM-DD; en la base es DATE. */
+function groupData<T extends UpdateGroupDto>(dto: T) {
+  const { patientBirthDate, ...rest } = dto;
+  return {
+    ...rest,
+    patientBirthDate: patientBirthDate === undefined ? undefined : patientBirthDate && isoToDateOnly(patientBirthDate),
+  };
+}
+
+function presentGroup(group: CareGroup, myRole: GroupRole) {
+  const { patientBirthDate, ...rest } = group;
+  return { ...rest, patientBirthDate: patientBirthDate && dateOnlyToIso(patientBirthDate), myRole };
 }
 
 function flattenMember(member: Prisma.MembershipGetPayload<{ select: typeof memberSelect }>) {

@@ -28,7 +28,7 @@ User ─┬─< Membership >─┬─ CareGroup ─┬─< Medication ─┬─<
 | Entidad | Campos clave | Notas |
 |---|---|---|
 | `User` | email (único), passwordHash, name | bcrypt. |
-| `CareGroup` | name, patientName, notes, timezone | `timezone` IANA, por defecto `America/Argentina/Buenos_Aires`. |
+| `CareGroup` | name, patientName, patientBirthDate, patientAllergies, patientConditions, notes, doctorName, doctorSpecialty, doctorPhone, doctorEmail, timezone | Un grupo = una persona cuidada. `timezone` IANA, por defecto `America/Argentina/Buenos_Aires`. Un solo médico de cabecera por ahora (si hacen falta más, tabla propia). |
 | `Membership` | userId, groupId, role | `UNIQUE(userId, groupId)`. Roles: `ADMIN`, `CAREGIVER`, `VIEWER`. |
 | `Invitation` | groupId, email?, role, tokenHash, expiresAt, acceptedAt, revokedAt | Se guarda solo el hash SHA-256 del token. |
 | `Medication` | name, strength ("10 mg"), form, instructions, stock, lowStockThreshold, active | `stock` en unidades (comprimidos, ml, gotas). Admite medias unidades. |
@@ -133,7 +133,7 @@ Base: `/api`. Documentación interactiva: `/docs` (Swagger).
 | GET | `/groups` | Mis grupos con mi rol |
 | POST | `/groups` | Crear grupo (quedo como ADMIN) |
 | GET | `/groups/:groupId` | Miembro |
-| PATCH | `/groups/:groupId` | ADMIN |
+| PATCH | `/groups/:groupId` | ADMIN — también datos de la persona cuidada y del médico. `patientBirthDate` en `YYYY-MM-DD`, `doctorPhone` solo dígitos, espacios, `+`, `-` y paréntesis; `null` borra un dato |
 | GET | `/groups/:groupId/members` | Miembro |
 | PATCH | `/groups/:groupId/members/:userId` | ADMIN — cambiar rol |
 | DELETE | `/groups/:groupId/members/:userId` | ADMIN, o uno mismo para salir |

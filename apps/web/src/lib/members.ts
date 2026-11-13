@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './api';
 import { queryKeys } from './queries';
-import type { Group, GroupRole } from './types';
+import type { Group, GroupRole, GroupUpdate } from './types';
 
 /** `flattenMember` de apps/api/src/groups/groups.service.ts. */
 export interface Member {
@@ -98,7 +98,7 @@ export function useRevokeInvitation(groupId: string) {
 export function useUpdateGroup(groupId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { name: string; patientName: string; notes: string }) =>
+    mutationFn: (input: GroupUpdate) =>
       api<Group>(`/groups/${groupId}`, { method: 'PATCH', body: input }),
     onSuccess: (group) => {
       queryClient.setQueryData(queryKeys.group(groupId), group);

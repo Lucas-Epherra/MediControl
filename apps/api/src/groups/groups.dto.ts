@@ -7,12 +7,13 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  Matches,
   MaxLength,
   Validate,
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { isValidTimezone } from '../common/dates';
+import { ISO_DATE_REGEX, isValidTimezone } from '../common/dates';
 
 @ValidatorConstraint({ name: 'timezone' })
 class IsTimezone implements ValidatorConstraintInterface {
@@ -24,6 +25,8 @@ class IsTimezone implements ValidatorConstraintInterface {
     return 'timezone debe ser una zona horaria IANA válida';
   }
 }
+
+const PHONE_REGEX = /^[\d\s+()-]{6,30}$/;
 
 export class CreateGroupDto {
   /** Nombre del grupo, por ejemplo "Cuidado de Marta". */
@@ -38,9 +41,43 @@ export class CreateGroupDto {
   patientName: string;
 
   @IsOptional()
+  @Matches(ISO_DATE_REGEX, { message: 'patientBirthDate debe tener formato YYYY-MM-DD' })
+  patientBirthDate?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  patientAllergies?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  patientConditions?: string | null;
+
+  @IsOptional()
   @IsString()
   @MaxLength(2000)
-  notes?: string;
+  notes?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  doctorName?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  doctorSpecialty?: string | null;
+
+  /** Teléfono tal como se marca; se admiten dígitos, espacios, +, -, paréntesis. */
+  @IsOptional()
+  @Matches(PHONE_REGEX, { message: 'doctorPhone solo admite números, espacios, +, - y paréntesis' })
+  doctorPhone?: string | null;
+
+  @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))
+  @IsEmail({}, { message: 'doctorEmail debe ser un email válido' })
+  doctorEmail?: string | null;
 
   /** Zona horaria IANA. Por defecto America/Argentina/Buenos_Aires. */
   @IsOptional()
